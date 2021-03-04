@@ -1,0 +1,17 @@
+LED_SWITCH_ID = 'LEDSwitch'
+
+STATIC_TAB_PREFIX = 'STATIC'
+RESPONSIVE_TAB_PREFIX = 'RESPONSIVE'
+
+TAB_SUFFIX = 'tab'
+NUMBER_TYPE_SUFFIX = 'number';
+RANGE_TYPE_SUFFIX = 'range';
+COLORPICKER_SUFFIX = 'colorPicker';
+
+COLOR_SUFFIXES = {
+    'RED': 'R',
+    'GREEN': 'G',
+    'BLUE': 'B'
+};
+
+SEPERATOR = '_';
