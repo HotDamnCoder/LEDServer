@@ -26,8 +26,6 @@
 AsyncWebServer SERVER(HTTPPORT);
 WiFiUDP UDPSERVER;
 
-char packetBuffer[UDP_TX_PACKET_MAX_SIZE];
-
 bool LEDS_ON = true;
 bool RESPONSIVE_MODE = true;
 
@@ -125,11 +123,11 @@ void getColor(long *r, long *g, long *b)
   }
 }
 
-void setColorFromBuffer()
+void setColorFromBuffer(char* packet)
 {
 
   long r, g, b;
-  String packet_string = String(packetBuffer);
+  String packet_string = String(packet);
 
   int packet_starts = packet_string.indexOf('R');
   int red_ends = packet_string.indexOf('G');
@@ -179,11 +177,11 @@ void setupLittleFS()
   }
 }
 
-void setupArduinoOTA()
+void setupArduinoOTA(const int port, const char* pass, const char* hostname)
 {
-  ArduinoOTA.setPort(OTAPORT);
-  ArduinoOTA.setHostname(HOSTNAME);
-  ArduinoOTA.setPassword(OTAPASS);
+  ArduinoOTA.setPort(port);
+  ArduinoOTA.setHostname(pass);
+  ArduinoOTA.setPassword(hostname);
 
   ArduinoOTA.onStart([]() {
     String type;
@@ -251,7 +249,6 @@ void setupServer()
   });
 
   SERVER.on("/api/setColor", [](AsyncWebServerRequest *request) {
-    unsigned long start = micros();
     if (!request->hasParam("R") && !request->hasParam("G") && !request->hasParam("B"))
     {
       request->send(400);
@@ -265,8 +262,6 @@ void setupServer()
       b = request->getParam("B")->value().toInt();
       setColor(r, g, b);
     }
-    Serial.println(micros() - start);
-
     request->send(204);
   });
 
@@ -308,14 +303,14 @@ void setup(void)
 
   connectToWiFi(STASSID, STAPSK, IP, GATEWAY, SUBNET);
 
-  setupArduinoOTA();
+  setupArduinoOTA(OTAPORT, OTAPASS, HOSTNAME);
   setupServer();
 
   ArduinoOTA.begin();
   UDPSERVER.begin(UDPPORT);
   SERVER.begin();
 
-  Serial.println("Ready");
+  Serial.println("Ready!");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 }
@@ -328,8 +323,9 @@ void loop(void)
     int packetSize = UDPSERVER.parsePacket();
     if (packetSize)
     {
-      UDPSERVER.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
-      setColorFromBuffer();
+      char packet[packetSize];
+      UDPSERVER.read(packet, packetSize);
+      setColorFromBuffer(packet);
     }
   }
   if (LEDS_ON)
