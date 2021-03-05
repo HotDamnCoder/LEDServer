@@ -133,6 +133,7 @@ void setColorFromBuffer(char* packet)
   int red_ends = packet_string.indexOf('G');
   int green_ends = packet_string.indexOf('B');
   int packet_ends = packet_string.indexOf('E');
+
   r = packet_string.substring(packet_starts + 1, red_ends).toInt();
   g = packet_string.substring(red_ends + 1, green_ends).toInt();
   b = packet_string.substring(green_ends + 1, packet_ends).toInt();
@@ -180,8 +181,8 @@ void setupLittleFS()
 void setupArduinoOTA(const int port, const char* pass, const char* hostname)
 {
   ArduinoOTA.setPort(port);
-  ArduinoOTA.setHostname(pass);
-  ArduinoOTA.setPassword(hostname);
+  ArduinoOTA.setHostname(hostname);
+  ArduinoOTA.setPassword(pass);
 
   ArduinoOTA.onStart([]() {
     String type;
@@ -232,15 +233,15 @@ void setupServer()
 {
 
   SERVER.on("/api/setState", [](AsyncWebServerRequest *request) {
-    if (!request->hasParam("state"))
-    {
-      request->send(400);
-    }
-    else
+    if (request->hasParam("state"))
     {
       String stateValue = request->getParam("state")->value();
       setState(stateValue);
       request->send(204);
+    }
+    else
+    {
+      request->send(400);
     }
   });
 
@@ -249,20 +250,23 @@ void setupServer()
   });
 
   SERVER.on("/api/setColor", [](AsyncWebServerRequest *request) {
-    if (!request->hasParam("R") && !request->hasParam("G") && !request->hasParam("B"))
-    {
-      request->send(400);
-    }
-    else
+    if (request->hasParam("R") && request->hasParam("G") && request->hasParam("B"))
     {
       long r, g, b;
       getColor(&r, &g, &b);
+
       r = request->getParam("R")->value().toInt();
       g = request->getParam("G")->value().toInt();
       b = request->getParam("B")->value().toInt();
+
       setColor(r, g, b);
+
+      request->send(204);
     }
-    request->send(204);
+    else
+    {
+      request->send(400);
+    }
   });
 
   SERVER.on("/api/static/getColor", [](AsyncWebServerRequest *request) {
@@ -274,15 +278,16 @@ void setupServer()
   });
 
   SERVER.on("/api/setMode", [](AsyncWebServerRequest *request) {
-    if (!request->hasParam("mode"))
-    {
-      request->send(400);
-    }
-    else
+    if (request->hasParam("mode"))
     {
       String modeValue = request->getParam("mode")->value();
       setMode(modeValue);
       request->send(204);
+
+    }
+    else
+    {
+      request->send(400);
     }
   });
 
