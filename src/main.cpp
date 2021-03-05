@@ -10,16 +10,23 @@
 #define G_LED_PIN D6
 #define B_LED_PIN D8
 
+#define HOSTNAME "esp8266"
 #define STASSID "***REMOVED***"
-#define STAPSK  "***REMOVED***"
+#define STAPSK "***REMOVED***"
+#define OTAPASS "***REMOVED***"
+
+#define IP "192.168.1.139"
+#define GATEWAY "192.168.1.1"
+#define SUBNET "255.255.255.0"
 
 #define HTTPPORT 80
-
-const IPAddress IP(192, 168, 1, 139);
-const IPAddress GATEWAY(192, 168, 1, 1);
-const IPAddress SUBNET(255, 255, 255, 0);
+#define OTAPORT 8069
+#define UDPPORT 8888
 
 AsyncWebServer SERVER(HTTPPORT);
+WiFiUDP UDPSERVER;
+
+char packetBuffer[UDP_TX_PACKET_MAX_SIZE];
 
 bool LEDS_ON = true;
 bool RESPONSIVE_MODE = true;
@@ -32,14 +39,21 @@ long RESPONSIVE_R_VALUE = 0;
 long RESPONSIVE_G_VALUE = 0;
 long RESPONSIVE_B_VALUE = 0;
 
-void turn_off_leds()
+void restart()
+{
+  Serial.println("Rebooting...");
+  delay(5000);
+  ESP.restart();
+}
+
+void turnOffLeds()
 {
   analogWrite(R_LED_PIN, 0);
   analogWrite(G_LED_PIN, 0);
   analogWrite(B_LED_PIN, 0);
 }
 
-void display_color()
+void displayColor()
 {
   if (RESPONSIVE_MODE)
   {
@@ -55,28 +69,31 @@ void display_color()
   }
 }
 
-void set_led_state(String state)
+void setState(String state)
 {
   LEDS_ON = state == "true";
   if (!LEDS_ON)
   {
-    turn_off_leds();
+    turnOffLeds();
   }
 }
 
-String get_led_state(){
+String getState()
+{
   return LEDS_ON ? "true" : "false";
 }
 
-void set_led_mode(String mode){
-    RESPONSIVE_MODE = mode == "RESPONSIVE";
+void setMode(String mode)
+{
+  RESPONSIVE_MODE = mode == "RESPONSIVE";
 }
 
-String get_led_mode(){
+String getMode()
+{
   return RESPONSIVE_MODE ? "RESPONSIVE" : "STATIC";
 }
 
-void set_color(long r, long g, long b)
+void setColor(long r, long g, long b)
 {
   if (RESPONSIVE_MODE)
   {
@@ -92,115 +109,90 @@ void set_color(long r, long g, long b)
   }
 }
 
-void get_color(long* r, long* g, long* b){
-  if (RESPONSIVE_MODE){
+void getColor(long *r, long *g, long *b)
+{
+  if (RESPONSIVE_MODE)
+  {
     *r = RESPONSIVE_R_VALUE;
     *g = RESPONSIVE_G_VALUE;
     *b = RESPONSIVE_B_VALUE;
   }
-  else{
+  else
+  {
     *r = STATIC_R_VALUE;
     *g = STATIC_G_VALUE;
     *b = STATIC_B_VALUE;
   }
 }
 
-void handleSettingLEDState(AsyncWebServerRequest *request)
+void setColorFromBuffer()
 {
-  if (!request->hasParam("state"))
-  {
-    request->send(400);
-  }
-  else
-  {
-    String stateValue = request->getParam("state")->value();
-    set_led_state(stateValue);
-    request->send(204);
-  }
-}
 
-void handleGettingLEDState(AsyncWebServerRequest *request)
-{
-  request->send(200, "text/plain", get_led_state());
-}
-
-void handleColorSetting(AsyncWebServerRequest *request)
-{
-  unsigned long start = micros();
-  set_color(255, 255, 255);
-  unsigned long end = micros();
-  unsigned long delta = end - start;
-  Serial.println(delta);
-  request->send(204);
-}
-
-void handleColorGetting(AsyncWebServerRequest *request)
-{
   long r, g, b;
-  get_color(&r ,&g, &b);
+  String packet_string = String(packetBuffer);
 
-  String message = "R" + String(r) + "G" + String(g) + "B" + String(b);
-  request->send(200, "text/plain", message);
+  int packet_starts = packet_string.indexOf('R');
+  int red_ends = packet_string.indexOf('G');
+  int green_ends = packet_string.indexOf('B');
+  int packet_ends = packet_string.indexOf('E');
+  r = packet_string.substring(packet_starts + 1, red_ends).toInt();
+  g = packet_string.substring(red_ends + 1, green_ends).toInt();
+  b = packet_string.substring(green_ends + 1, packet_ends).toInt();
+
+  setColor(r, g, b);
 }
 
-void handleSettingLEDMode(AsyncWebServerRequest *request)
-{
-  if (!request->hasParam("mode"))
-  {
-    request->send(400);
-  }
-  else
-  {
-    String modeValue = request->getParam("mode")->value();
-    set_led_mode(modeValue);
-    request->send(204);
-  }
-}
-
-void handleGettingLEDMode(AsyncWebServerRequest *request)
-{
-  request->send(200, "text/plain", get_led_mode());
-}
-
-void setup_pins()
+void setupPins()
 {
   pinMode(R_LED_PIN, OUTPUT);
   pinMode(G_LED_PIN, OUTPUT);
   pinMode(B_LED_PIN, OUTPUT);
 }
 
-void connect_to_wifi()
+void connectToWiFi(const char *stassid, const char *stapsk,
+                   const char *ip_str, const char *gateway_str, const char *subnet_str)
 {
   WiFi.mode(WIFI_STA);
-  WiFi.config(IP, GATEWAY, SUBNET);
-  WiFi.begin(STASSID, STAPSK);
 
-  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection Failed! Rebooting...");
-    delay(5000);
-    ESP.restart();
+  IPAddress ip, gateway, subnet;
+
+  ip.fromString(ip_str);
+  gateway.fromString(gateway_str);
+  subnet.fromString(subnet_str);
+
+  WiFi.config(ip, gateway, subnet);
+  WiFi.begin(stassid, stapsk);
+
+  while (WiFi.waitForConnectResult() != WL_CONNECTED)
+  {
+    Serial.println("Connection Failed!");
+    restart();
   }
 }
 
-void setup_ArduinoOTA(){
-  // Port defaults to 8266
-  // ArduinoOTA.setPort(8266);
+void setupLittleFS()
+{
+  if (!LittleFS.begin())
+  {
+    Serial.println("LittleFS mount failed");
+    restart();
+  }
+}
 
-  // Hostname defaults to esp8266-[ChipID]
-  // ArduinoOTA.setHostname("myesp8266");
-
-  // No authentication by default
-  // ArduinoOTA.setPassword("***REMOVED***");
-
-  // Password can be set with it's md5 value as well
-  // MD5(***REMOVED***) = 21232f297a57a5a743894a0e4a801fc3
-  // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
+void setupArduinoOTA()
+{
+  ArduinoOTA.setPort(OTAPORT);
+  ArduinoOTA.setHostname(HOSTNAME);
+  ArduinoOTA.setPassword(OTAPASS);
 
   ArduinoOTA.onStart([]() {
     String type;
-    if (ArduinoOTA.getCommand() == U_FLASH) {
+    if (ArduinoOTA.getCommand() == U_FLASH)
+    {
       type = "sketch";
-    } else { // U_FS
+    }
+    else
+    { // U_FS
       type = "filesystem";
     }
 
@@ -215,71 +207,133 @@ void setup_ArduinoOTA(){
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) {
+    if (error == OTA_AUTH_ERROR)
+    {
       Serial.println("Auth Failed");
-    } else if (error == OTA_BEGIN_ERROR) {
+    }
+    else if (error == OTA_BEGIN_ERROR)
+    {
       Serial.println("Begin Failed");
-    } else if (error == OTA_CONNECT_ERROR) {
+    }
+    else if (error == OTA_CONNECT_ERROR)
+    {
       Serial.println("Connect Failed");
-    } else if (error == OTA_RECEIVE_ERROR) {
+    }
+    else if (error == OTA_RECEIVE_ERROR)
+    {
       Serial.println("Receive Failed");
-    } else if (error == OTA_END_ERROR) {
+    }
+    else if (error == OTA_END_ERROR)
+    {
       Serial.println("End Failed");
     }
   });
-  
-  ArduinoOTA.begin();
 }
 
-void setup_server()
+void setupServer()
 {
 
-  SERVER.on("/api/setState", HTTP_GET, handleSettingLEDState);
-  SERVER.on("/api/getState", handleGettingLEDState);
+  SERVER.on("/api/setState", [](AsyncWebServerRequest *request) {
+    if (!request->hasParam("state"))
+    {
+      request->send(400);
+    }
+    else
+    {
+      String stateValue = request->getParam("state")->value();
+      setState(stateValue);
+      request->send(204);
+    }
+  });
 
-  SERVER.on("/api/setColor", handleColorSetting);
-  SERVER.on("/api/static/getColor", handleColorGetting);
+  SERVER.on("/api/getState", [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", getState());
+  });
 
-  SERVER.on("/api/setMode", handleSettingLEDMode);
-  SERVER.on("/api/getMode", handleGettingLEDMode);
+  SERVER.on("/api/setColor", [](AsyncWebServerRequest *request) {
+    unsigned long start = micros();
+    if (!request->hasParam("R") && !request->hasParam("G") && !request->hasParam("B"))
+    {
+      request->send(400);
+    }
+    else
+    {
+      long r, g, b;
+      getColor(&r, &g, &b);
+      r = request->getParam("R")->value().toInt();
+      g = request->getParam("G")->value().toInt();
+      b = request->getParam("B")->value().toInt();
+      setColor(r, g, b);
+    }
+    Serial.println(micros() - start);
+
+    request->send(204);
+  });
+
+  SERVER.on("/api/static/getColor", [](AsyncWebServerRequest *request) {
+    long r, g, b;
+    getColor(&r, &g, &b);
+
+    String message = "R" + String(r) + "G" + String(g) + "B" + String(b);
+    request->send(200, "text/plain", message);
+  });
+
+  SERVER.on("/api/setMode", [](AsyncWebServerRequest *request) {
+    if (!request->hasParam("mode"))
+    {
+      request->send(400);
+    }
+    else
+    {
+      String modeValue = request->getParam("mode")->value();
+      setMode(modeValue);
+      request->send(204);
+    }
+  });
+
+  SERVER.on("/api/getMode", [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", getMode());
+  });
 
   SERVER.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
-  SERVER.serveStatic("/CSS/", LittleFS, "/CSS/");
-  SERVER.serveStatic("/JS/", LittleFS, "/JS/");
-
-  SERVER.begin();
 }
 
 void setup(void)
 {
   Serial.begin(115200);
-  Serial.println("Booting");
+  Serial.println("Booting...");
 
-  LittleFS.begin();
+  setupPins();
+  setupLittleFS();
 
-  setup_pins();
+  connectToWiFi(STASSID, STAPSK, IP, GATEWAY, SUBNET);
 
-  connect_to_wifi();
+  setupArduinoOTA();
+  setupServer();
 
-  //setup_ArduinoOTA();
-
-  setup_server();
+  ArduinoOTA.begin();
+  UDPSERVER.begin(UDPPORT);
+  SERVER.begin();
 
   Serial.println("Ready");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-
 }
 void loop(void)
 {
-  //ArduinoOTA.handle();
+  ArduinoOTA.handle();
 
   if (RESPONSIVE_MODE)
   {
-    delay(0);
+    int packetSize = UDPSERVER.parsePacket();
+    if (packetSize)
+    {
+      UDPSERVER.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
+      setColorFromBuffer();
+    }
   }
   if (LEDS_ON)
   {
-    display_color();
+    displayColor();
   }
 }
