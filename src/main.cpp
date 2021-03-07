@@ -24,18 +24,43 @@
 #define UDPPORT 8888
 
 AsyncWebServer SERVER(HTTPPORT);
+AsyncWebSocket SERVER_WS("/ws");
+
 WiFiUDP UDPSERVER;
 
 bool LEDS_ON = true;
 bool RESPONSIVE_MODE = true;
 
-long STATIC_R_VALUE = 0;
-long STATIC_G_VALUE = 0;
-long STATIC_B_VALUE = 0;
+struct colors
+{
+  int r = 0;
+  int g = 0;
+  int b = 0;
 
-long RESPONSIVE_R_VALUE = 0;
-long RESPONSIVE_G_VALUE = 0;
-long RESPONSIVE_B_VALUE = 0;
+  String getColorCode()
+  {
+    return "R" + String(r) + "G" + String(g) + "B" + String(b) + "E";
+  }
+
+  void setColors(int r_value, int g_value, int b_value)
+  {
+    r = r_value;
+    g = g_value;
+    b = b_value;
+  }
+
+  void setColorsFromCode(String code)
+  {
+    int code_starts = code.indexOf('R');
+    int red_ends = code.indexOf('G');
+    int green_ends = code.indexOf('B');
+    int code_ends = code.indexOf('E');
+
+    r = code.substring(code_starts + 1, red_ends).toInt();
+    g = code.substring(red_ends + 1, green_ends).toInt();
+    b = code.substring(green_ends + 1, code_ends).toInt();
+  }
+} RESPONSIVE_COLOR_VALUES, STATIC_COLOR_VALUES;
 
 void restart()
 {
@@ -55,25 +80,21 @@ void displayColor()
 {
   if (RESPONSIVE_MODE)
   {
-    analogWrite(R_LED_PIN, RESPONSIVE_R_VALUE);
-    analogWrite(G_LED_PIN, RESPONSIVE_G_VALUE);
-    analogWrite(B_LED_PIN, RESPONSIVE_B_VALUE);
+    analogWrite(R_LED_PIN, RESPONSIVE_COLOR_VALUES.r);
+    analogWrite(G_LED_PIN, RESPONSIVE_COLOR_VALUES.g);
+    analogWrite(B_LED_PIN, RESPONSIVE_COLOR_VALUES.b);
   }
   else
   {
-    analogWrite(R_LED_PIN, STATIC_R_VALUE);
-    analogWrite(G_LED_PIN, STATIC_G_VALUE);
-    analogWrite(B_LED_PIN, STATIC_B_VALUE);
+    analogWrite(R_LED_PIN, STATIC_COLOR_VALUES.r);
+    analogWrite(G_LED_PIN, STATIC_COLOR_VALUES.g);
+    analogWrite(B_LED_PIN, STATIC_COLOR_VALUES.b);
   }
 }
 
 void setState(String state)
 {
   LEDS_ON = state == "true";
-  if (!LEDS_ON)
-  {
-    turnOffLeds();
-  }
 }
 
 String getState()
@@ -91,54 +112,75 @@ String getMode()
   return RESPONSIVE_MODE ? "RESPONSIVE" : "STATIC";
 }
 
-void setColor(long r, long g, long b)
+void setColor(int r, int g, int b)
 {
   if (RESPONSIVE_MODE)
   {
-    RESPONSIVE_R_VALUE = r;
-    RESPONSIVE_G_VALUE = g;
-    RESPONSIVE_B_VALUE = b;
+    RESPONSIVE_COLOR_VALUES.setColors(r, g, b);
   }
   else
   {
-    STATIC_R_VALUE = r;
-    STATIC_G_VALUE = g;
-    STATIC_B_VALUE = b;
+    STATIC_COLOR_VALUES.setColors(r, g, b);
   }
 }
 
-void getColor(long *r, long *g, long *b)
+void setColor(String code)
 {
   if (RESPONSIVE_MODE)
   {
-    *r = RESPONSIVE_R_VALUE;
-    *g = RESPONSIVE_G_VALUE;
-    *b = RESPONSIVE_B_VALUE;
+    RESPONSIVE_COLOR_VALUES.setColorsFromCode(code);
   }
   else
   {
-    *r = STATIC_R_VALUE;
-    *g = STATIC_G_VALUE;
-    *b = STATIC_B_VALUE;
+    STATIC_COLOR_VALUES.setColorsFromCode(code);
   }
 }
 
-void setColorFromBuffer(char* packet)
+colors getColors()
 {
+  if (RESPONSIVE_MODE)
+  {
+    return RESPONSIVE_COLOR_VALUES;
+  }
+  else
+  {
+    return STATIC_COLOR_VALUES;
+  }
+}
 
-  long r, g, b;
-  String packet_string = String(packet);
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+{
+  AwsFrameInfo *info = (AwsFrameInfo *)arg;
+  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
+  {
+    Serial.println(String((char)data[len]));
+    data[len] = 0;
+    Serial.println(String((char *)data));
+    setColor(String((char *)data));
+  }
+}
 
-  int packet_starts = packet_string.indexOf('R');
-  int red_ends = packet_string.indexOf('G');
-  int green_ends = packet_string.indexOf('B');
-  int packet_ends = packet_string.indexOf('E');
-
-  r = packet_string.substring(packet_starts + 1, red_ends).toInt();
-  g = packet_string.substring(red_ends + 1, green_ends).toInt();
-  b = packet_string.substring(green_ends + 1, packet_ends).toInt();
-
-  setColor(r, g, b);
+void handleWebsocket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
+                     void *arg, uint8_t *data, size_t len)
+{
+  switch (type)
+  {
+  case WS_EVT_DATA:
+    handleWebSocketMessage(arg, data, len);
+    for (const auto &c : SERVER_WS.getClients())
+    {
+      if (c->status() == WS_CONNECTED && c->id() != client->id())
+      {
+        SERVER_WS.text(c->id(), getColors().getColorCode());
+      }
+    }
+    break;
+  case WS_EVT_CONNECT:
+  case WS_EVT_DISCONNECT:
+  case WS_EVT_PONG:
+  case WS_EVT_ERROR:
+    break;
+  }
 }
 
 void setupPins()
@@ -178,7 +220,7 @@ void setupLittleFS()
   }
 }
 
-void setupArduinoOTA(const int port, const char* pass, const char* hostname)
+void setupArduinoOTA(const int port, const char *pass, const char *hostname)
 {
   ArduinoOTA.setPort(port);
   ArduinoOTA.setHostname(hostname);
@@ -231,12 +273,18 @@ void setupArduinoOTA(const int port, const char* pass, const char* hostname)
 
 void setupServer()
 {
+  SERVER_WS.onEvent(handleWebsocket);
+  SERVER.addHandler(&SERVER_WS);
 
   SERVER.on("/api/setState", [](AsyncWebServerRequest *request) {
     if (request->hasParam("state"))
     {
       String stateValue = request->getParam("state")->value();
       setState(stateValue);
+      if (!LEDS_ON)
+      {
+        turnOffLeds();
+      }
       request->send(204);
     }
     else
@@ -252,15 +300,13 @@ void setupServer()
   SERVER.on("/api/setColor", [](AsyncWebServerRequest *request) {
     if (request->hasParam("R") && request->hasParam("G") && request->hasParam("B"))
     {
-      long r, g, b;
-      getColor(&r, &g, &b);
 
+      long r, g, b;
       r = request->getParam("R")->value().toInt();
       g = request->getParam("G")->value().toInt();
       b = request->getParam("B")->value().toInt();
 
       setColor(r, g, b);
-
       request->send(204);
     }
     else
@@ -269,12 +315,8 @@ void setupServer()
     }
   });
 
-  SERVER.on("/api/static/getColor", [](AsyncWebServerRequest *request) {
-    long r, g, b;
-    getColor(&r, &g, &b);
-
-    String message = "R" + String(r) + "G" + String(g) + "B" + String(b);
-    request->send(200, "text/plain", message);
+  SERVER.on("/api/getColor", [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", getColors().getColorCode());
   });
 
   SERVER.on("/api/setMode", [](AsyncWebServerRequest *request) {
@@ -283,7 +325,6 @@ void setupServer()
       String modeValue = request->getParam("mode")->value();
       setMode(modeValue);
       request->send(204);
-
     }
     else
     {
@@ -319,10 +360,10 @@ void setup(void)
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 }
+
 void loop(void)
 {
   ArduinoOTA.handle();
-
   if (RESPONSIVE_MODE)
   {
     int packetSize = UDPSERVER.parsePacket();
@@ -330,11 +371,12 @@ void loop(void)
     {
       char packet[packetSize];
       UDPSERVER.read(packet, packetSize);
-      setColorFromBuffer(packet);
+      setColor(String(packet));
     }
   }
   if (LEDS_ON)
   {
     displayColor();
   }
+  SERVER_WS.cleanupClients();
 }
