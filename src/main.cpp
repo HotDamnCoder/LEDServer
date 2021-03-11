@@ -24,9 +24,10 @@
 #define UDPPORT 8888
 
 AsyncWebServer SERVER(HTTPPORT);
-AsyncWebSocket SERVER_WS("/ws");
-
+AsyncWebSocket SERVER_WEBSOCKET("/");
 WiFiUDP UDPSERVER;
+
+IPAddress CONNECTED_AUDIO_IP;
 
 bool LEDS_ON = true;
 bool RESPONSIVE_MODE = true;
@@ -95,6 +96,10 @@ void displayColor()
 void setState(String state)
 {
   LEDS_ON = state == "true";
+  if (!LEDS_ON)
+  {
+    turnOffLeds();
+  }
 }
 
 String getState()
@@ -136,6 +141,14 @@ void setColor(String code)
   }
 }
 
+void setAudioIP(String ip){
+  IPAddress new_ip;
+  new_ip.fromString(ip);
+  CONNECTED_AUDIO_IP = new_ip;
+}
+String getAudioIP(){
+  return CONNECTED_AUDIO_IP.toString() == "(IP unset)" ? "none" : CONNECTED_AUDIO_IP.toString();
+}
 colors getColors()
 {
   if (RESPONSIVE_MODE)
@@ -148,15 +161,49 @@ colors getColors()
   }
 }
 
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+void textAllExceptClient(AsyncWebSocketClient *client, String text)
+{
+  for (const auto &c : SERVER_WEBSOCKET.getClients())
+  {
+    if (c->status() == WS_CONNECTED && c->id() != client->id())
+    {
+      SERVER_WEBSOCKET.text(c->id(), text);
+    }
+  }
+}
+
+void handleIncomingData(AsyncWebSocketClient *client, void *arg, uint8_t *data, size_t len)
 {
   AwsFrameInfo *info = (AwsFrameInfo *)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
   {
-    Serial.println(String((char)data[len]));
     data[len] = 0;
-    Serial.println(String((char *)data));
-    setColor(String((char *)data));
+    String data_string = String((char *)data);
+
+    int splitting_index = data_string.indexOf('=');
+    String parameter = data_string.substring(0, splitting_index);
+    String value = data_string.substring(splitting_index + 1);
+
+    if (parameter == "COLOR")
+    {
+      setColor(value);
+      textAllExceptClient(client, "COLOR=" + getColors().getColorCode());
+    }
+    else if (parameter == "MODE")
+    {
+      setMode(value);
+      textAllExceptClient(client, "MODE=" + getMode());
+      textAllExceptClient(client, "COLOR=" + getColors().getColorCode());
+    }
+    else if (parameter == "STATE")
+    {
+      setState(value);
+      textAllExceptClient(client, "STATE=" + getState());
+    }
+    else if (parameter == "AUDIO_SOURCE"){
+      setAudioIP(value);
+      textAllExceptClient(client, "AUDIO_SOURCE=" + getAudioIP());
+    }
   }
 }
 
@@ -166,25 +213,30 @@ void handleWebsocket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEv
   switch (type)
   {
   case WS_EVT_DATA:
-    handleWebSocketMessage(arg, data, len);
-    for (const auto &c : SERVER_WS.getClients())
-    {
-      if (c->status() == WS_CONNECTED && c->id() != client->id())
-      {
-        SERVER_WS.text(c->id(), getColors().getColorCode());
-      }
-    }
+    handleIncomingData(client, arg, data, len);
     break;
   case WS_EVT_CONNECT:
+    Serial.printf("Client %s connected with an ID of %u!\n", client->remoteIP().toString().c_str(), client->id());
+    client->text("STATE=" + getState());
+    client->text("MODE=" + getMode());
+    client->text("COLOR=" + getColors().getColorCode());
+    client->text("AUDIO_SOURCE=" + getAudioIP());
+    break;
   case WS_EVT_DISCONNECT:
+    Serial.printf("Client %u disconnected!\n", client->id());
+    break;
   case WS_EVT_PONG:
+    Serial.printf("Pong! ID:%u!\n", client->id());
+    break;
   case WS_EVT_ERROR:
+    Serial.printf("Error %u %s! Client ID:%u!\n", *((uint16_t *)arg), (char *)data, client->id());
     break;
   }
 }
 
 void setupPins()
 {
+  Serial.println("Setting up the pins...");
   pinMode(R_LED_PIN, OUTPUT);
   pinMode(G_LED_PIN, OUTPUT);
   pinMode(B_LED_PIN, OUTPUT);
@@ -193,6 +245,8 @@ void setupPins()
 void connectToWiFi(const char *stassid, const char *stapsk,
                    const char *ip_str, const char *gateway_str, const char *subnet_str)
 {
+  Serial.println("Connecting to WiFi...");
+
   WiFi.mode(WIFI_STA);
 
   IPAddress ip, gateway, subnet;
@@ -213,6 +267,8 @@ void connectToWiFi(const char *stassid, const char *stapsk,
 
 void setupLittleFS()
 {
+  Serial.println("Setting up the LittleFS filesystem...");
+
   if (!LittleFS.begin())
   {
     Serial.println("LittleFS mount failed");
@@ -222,6 +278,8 @@ void setupLittleFS()
 
 void setupArduinoOTA(const int port, const char *pass, const char *hostname)
 {
+  Serial.println("Setting up ArduinoOTA...");
+
   ArduinoOTA.setPort(port);
   ArduinoOTA.setHostname(hostname);
   ArduinoOTA.setPassword(pass);
@@ -273,68 +331,11 @@ void setupArduinoOTA(const int port, const char *pass, const char *hostname)
 
 void setupServer()
 {
-  SERVER_WS.onEvent(handleWebsocket);
-  SERVER.addHandler(&SERVER_WS);
+  Serial.println("Setting up the HTTP and WebSocket server...");
 
-  SERVER.on("/api/setState", [](AsyncWebServerRequest *request) {
-    if (request->hasParam("state"))
-    {
-      String stateValue = request->getParam("state")->value();
-      setState(stateValue);
-      if (!LEDS_ON)
-      {
-        turnOffLeds();
-      }
-      request->send(204);
-    }
-    else
-    {
-      request->send(400);
-    }
-  });
+  SERVER_WEBSOCKET.onEvent(handleWebsocket);
 
-  SERVER.on("/api/getState", [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", getState());
-  });
-
-  SERVER.on("/api/setColor", [](AsyncWebServerRequest *request) {
-    if (request->hasParam("R") && request->hasParam("G") && request->hasParam("B"))
-    {
-
-      long r, g, b;
-      r = request->getParam("R")->value().toInt();
-      g = request->getParam("G")->value().toInt();
-      b = request->getParam("B")->value().toInt();
-
-      setColor(r, g, b);
-      request->send(204);
-    }
-    else
-    {
-      request->send(400);
-    }
-  });
-
-  SERVER.on("/api/getColor", [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", getColors().getColorCode());
-  });
-
-  SERVER.on("/api/setMode", [](AsyncWebServerRequest *request) {
-    if (request->hasParam("mode"))
-    {
-      String modeValue = request->getParam("mode")->value();
-      setMode(modeValue);
-      request->send(204);
-    }
-    else
-    {
-      request->send(400);
-    }
-  });
-
-  SERVER.on("/api/getMode", [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", getMode());
-  });
+  SERVER.addHandler(&SERVER_WEBSOCKET);
 
   SERVER.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
 }
@@ -356,27 +357,28 @@ void setup(void)
   UDPSERVER.begin(UDPPORT);
   SERVER.begin();
 
-  Serial.println("Ready!");
-  Serial.print("IP address: ");
+  Serial.print("Ready!");
+  Serial.print(" IP address: ");
   Serial.println(WiFi.localIP());
 }
 
 void loop(void)
 {
+  SERVER_WEBSOCKET.cleanupClients();
   ArduinoOTA.handle();
   if (RESPONSIVE_MODE)
   {
     int packetSize = UDPSERVER.parsePacket();
-    if (packetSize)
+    if (packetSize && UDPSERVER.remoteIP() == CONNECTED_AUDIO_IP)
     {
       char packet[packetSize];
       UDPSERVER.read(packet, packetSize);
       setColor(String(packet));
+      SERVER_WEBSOCKET.textAll("COLOR=" + getColors().getColorCode());
     }
   }
   if (LEDS_ON)
   {
     displayColor();
   }
-  SERVER_WS.cleanupClients();
 }

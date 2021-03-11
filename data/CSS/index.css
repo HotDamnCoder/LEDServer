@@ -1,12 +1,9 @@
 body,
 span,
-input {
-    background-color: #011627 !important;
-    color: #F7EBE8 !important
-}
-
-nav {
-    background-color: #E54B4B !important;
+input,
+.navbar-brand,
+.nav-link {
+    color: #F7EBE8 !important;
 }
 
 .nav-link:hover,
@@ -19,50 +16,47 @@ nav .nav-link:focus {
     color: #1E1E24 !important;
 }
 
-.navbar-brand {
-    font-weight: bold;
-    user-select: none;
+body,
+span,
+input{
+    background-color: #011627 !important;
 }
 
-.nav-link {
-    color: white;
-    font-weight: 600;
-    user-select: none;
-}
-
-.input-group-text {
-    width: 38px;
-    height: 38px;
-    user-select: none;
-}
-
-#color_container div.col {
-    padding-left: 0 !important;
-}
-
-input[type="color"] {
-    height: 100%;
-    width: 100%;
-    padding: 0;
-
+nav{
+    background-color: #E54B4B !important;
 }
 
 .form-check-input {
     background-color: #F7EBE8 !important;
 }
 
-.form-check-input:focus {
-    border-color: rgb(247, 235, 232);
-    box-shadow: none !important
+.navbar-brand,
+.nav-link {
+    font-weight: bold;
 }
-
-.form-control:focus {
-    box-shadow: none;
-    border-color: #E54B4B;
-}
-
+input[type="color"],
 .form-range {
     height: 100%;
+    width: 100%;
+    padding: 0;
+}
+
+
+
+button:focus,
+.form-control:focus,
+.form-check-input:focus
+ {
+    box-shadow: none !important;
+}
+
+.form-check-input:focus {
+    border-color: rgb(247, 235, 232);
+}
+
+button:focus,
+.form-control:focus{
+    border-color: #E54B4B !important;
 }
 
 .form-check-input:checked {
@@ -70,14 +64,9 @@ input[type="color"] {
     background-color: #FFA987 !important;
 }
 
+h6,
+.navbar-brand,
+.nav-link,
 .form-check-label {
     user-select: none;
-}
-
-.nav-tabs .nav-item {
-    width: 50%;
-}
-
-.nav-tabs .nav-item .nav-link {
-    width: 100%;
 }

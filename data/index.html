@@ -8,10 +8,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
     <link href="CSS/index.css" rel="stylesheet">
-
-    <script src="JS/constants.js"></script>
-    <script src="JS/APIhandiling.js"></script>
     <script src="JS/inputHandiling.js"></script>
+
     <script src="JS/tabHandling.js"></script>
 
     <title>Pedemajaka controlroom</title>
@@ -19,10 +17,10 @@
 
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark">
+        <nav class="navbar navbar-expand-lg navbar-dark ">
             <div class="container">
                 <a class="navbar-brand" href="/">240/241 RGB Controlroom</a>
-                <ul class="navbar-nav position-sticky top-0 start-100">
+                <ul class="navbar-nav">
                     <li class="nav-item">
                         <a class="nav-link" href="/">240</a>
                     </li>
@@ -34,10 +32,10 @@
         </nav>
     </header>
     <div class="container pt-3">
-        <ul class="nav nav-tabs">
+        <ul class="nav nav-tabs  nav-justified">
             <li class="nav-item">
-                <button id="STATIC_tab" class="nav-link" onclick="handleTabSwitch(this, 'STATIC');"
-                    type="button">Static LED color control</button>
+                <button id="STATIC_tab" class="nav-link" onclick="handleTabSwitch(this, 'STATIC');" type="button">Static
+                    LED color control</button>
             </li>
             <li class="nav-item">
                 <button id="RESPONSIVE_tab" class="nav-link" onclick="handleTabSwitch(this, 'RESPONSIVE');"
@@ -46,52 +44,50 @@
         </ul>
         <div class="tab-content pt-3">
             <div class="tab-pane" id="STATIC">
-                <div class="container" id="color_container">
+                <div class="container pt-2">
                     <div class="row">
-                        <div class="col">
-                            <div class="container">
-                                <div class="row">
-                                    <div class="col">
-                                        <div class="input-group">
-                                            <span class="input-group-text">R</span>
-                                            <input class="form-control" id="STATIC_R_number" type="number" min="0"
-                                                max="255" value="0" oninput="handleColorElementInput(this)">
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <input class="form-range" id="STATIC_R_range" type="range" min="0" max="255"
-                                            value="0" oninput="handleColorElementInput(this)">
+                        <div class="col-auto" style="width: 60%;">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text">R</span>
+                                        <input class="form-control" id="STATIC_R_number" type="number" min="0"
+                                            max="255" value="0" oninput="handleColorElementInput(this)">
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col">
-                                        <div class="input-group">
-                                            <span class="input-group-text">G</span>
-                                            <input id="STATIC_G_number" type="number" class="form-control" min="0"
-                                                max="255" value="0" oninput="handleColorElementInput(this)">
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <input id="STATIC_G_range" type="range" class="form-range" min="0" max="255"
-                                            value="0" oninput="handleColorElementInput(this)">
+                                <div class="col">
+                                    <input class="form-range" id="STATIC_R_range" type="range" min="0" max="255"
+                                        value="0" oninput="handleColorElementInput(this)">
+                                </div>
+                            </div>
+                            <div class="row pt-2">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text">G</span>
+                                        <input id="STATIC_G_number" type="number" class="form-control" min="0"
+                                            max="255" value="0" oninput="handleColorElementInput(this)">
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col">
-                                        <div class="input-group">
-                                            <span class="input-group-text">B</span>
-                                            <input id="STATIC_B_number" type="number" class="form-control" min="0"
-                                                max="255" value="0" oninput="handleColorElementInput(this)">
-                                        </div>
+                                <div class="col">
+                                    <input id="STATIC_G_range" type="range" class="form-range" min="0" max="255"
+                                        value="0" oninput="handleColorElementInput(this)">
+                                </div>
+                            </div>
+                            <div class="row pt-2">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text">B</span>
+                                        <input id="STATIC_B_number" type="number" class="form-control" min="0"
+                                            max="255" value="0" oninput="handleColorElementInput(this)">
                                     </div>
-                                    <div class="col">
-                                        <input id="STATIC_B_range" type="range" class="form-range" min="0" max="255"
-                                            value="0" oninput="handleColorElementInput(this)">
-                                    </div>
+                                </div>
+                                <div class="col">
+                                    <input id="STATIC_B_range" type="range" class="form-range" min="0" max="255"
+                                        value="0" oninput="handleColorElementInput(this)">
                                 </div>
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-auto" style="width: 40%;">
                             <input id="STATIC_colorPicker" type="color" class="form-control" value="#000000"
                                 oninput="handleColorPickerInput(this)">
                         </div>
@@ -99,54 +95,81 @@
                 </div>
             </div>
             <div class="tab-pane" id="RESPONSIVE">
-                <div class="container" id="color_container">
+                <div class="container pt-2">
                     <div class="row">
-                        <div class="col">
-                            <div class="container">
-                                <div class="row">
-                                    <div class="col">
-                                        <div class="input-group">
-                                            <span class="input-group-text">R</span>
-                                            <input class="form-control" id="RESPONSIVE_R_number" type="number" min="0"
-                                                max="255" value="0" oninput="handleColorElementInput(this)">
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <input class="form-range" id="RESPONSIVE_R_range" type="range" min="0" max="255"
-                                            value="0" oninput="handleColorElementInput(this)">
+                        <div class="col-auto" style="width: 60%;">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text">R</span>
+                                        <input class="form-control" id="RESPONSIVE_R_number" type="number" min="0"
+                                            max="255" value="0" oninput="handleColorElementInput(this)">
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col">
-                                        <div class="input-group">
-                                            <span class="input-group-text">G</span>
-                                            <input id="RESPONSIVE_G_number" type="number" class="form-control" min="0"
-                                                max="255" value="0" oninput="handleColorElementInput(this)">
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <input id="RESPONSIVE_G_range" type="range" class="form-range" min="0" max="255"
-                                            value="0" oninput="handleColorElementInput(this)">
+                                <div class="col">
+                                    <input class="form-range" id="RESPONSIVE_R_range" type="range" min="0" max="255"
+                                        value="0" oninput="handleColorElementInput(this)">
+                                </div>
+                            </div>
+                            <div class="row pt-2">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text">G</span>
+                                        <input id="RESPONSIVE_G_number" type="number" class="form-control" min="0"
+                                            max="255" value="0" oninput="handleColorElementInput(this)">
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col">
-                                        <div class="input-group">
-                                            <span class="input-group-text">B</span>
-                                            <input id="RESPONSIVE_B_number" type="number" class="form-control" min="0"
-                                                max="255" value="0" oninput="handleColorElementInput(this)">
-                                        </div>
+                                <div class="col">
+                                    <input id="RESPONSIVE_G_range" type="range" class="form-range" min="0" max="255"
+                                        value="0" oninput="handleColorElementInput(this)">
+                                </div>
+                            </div>
+                            <div class="row pt-2">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text">B</span>
+                                        <input id="RESPONSIVE_B_number" type="number" class="form-control" min="0"
+                                            max="255" value="0" oninput="handleColorElementInput(this)">
                                     </div>
-                                    <div class="col">
-                                        <input id="RESPONSIVE_B_range" type="range" class="form-range" min="0" max="255"
-                                            value="0" oninput="handleColorElementInput(this)">
-                                    </div>
+                                </div>
+                                <div class="col">
+                                    <input id="RESPONSIVE_B_range" type="range" class="form-range" min="0" max="255"
+                                        value="0" oninput="handleColorElementInput(this)">
                                 </div>
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-auto" style="width: 40%;">
                             <input id="RESPONSIVE_colorPicker" type="color" class="form-control" value="#000000"
                                 oninput="handleColorPickerInput(this)">
+                        </div>
+                    </div>
+                </div>
+                <div class="container pt-4">
+                    <div class="row">
+                        <div class="col-auto pt-2">
+                            <div class="row">
+                                <div class="col">
+                                    <h6 class="position-relative top-50 start-50 translate-middle">
+                                        Currently connected device : none
+                                    </h6>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-light"
+                                        onclick="handleAudioButton()">Disonnect</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto pt-2">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="input-group">
+                                        <span class="input-group-text">IP</span>
+                                        <input id="AudioSourceInput" type="text" class="form-control">
+                                        <button type="button" class="btn btn-light"
+                                            onclick="handleAudioButton()">Connect</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -160,7 +183,7 @@
             </div>
         </div>
     </div>
-    <script src="JS/eventHandiling.js"></script>
+    <script src="JS/APIhandiling.js"></script>
 </body>
 
 </html>

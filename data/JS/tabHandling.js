@@ -1,5 +1,6 @@
 function handleTabSwitch(tab, target_content) {
     updateTab(tab, target_content)
+    MODE = target_content;
     setLEDMode(target_content);
 }
 function updateTab(tab, target_content) {
