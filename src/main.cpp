@@ -155,6 +155,8 @@ colors getColors()
 
 void setAudioIP(String ip)
 {
+  IPAddress new_ip;
+  new_ip.fromString(ip);
   CONNECTED_AUDIO_IP.fromString(ip);
 }
 
