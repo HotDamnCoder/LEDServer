@@ -24,7 +24,7 @@
 #define UDPPORT 8888
 
 AsyncWebServer SERVER(HTTPPORT);
-AsyncWebSocket SERVER_WEBSOCKET("/");
+AsyncWebSocket SERVER_WEBSOCKET("/api");
 WiFiUDP UDPSERVER;
 
 IPAddress CONNECTED_AUDIO_IP;
@@ -141,14 +141,6 @@ void setColor(String code)
   }
 }
 
-void setAudioIP(String ip){
-  IPAddress new_ip;
-  new_ip.fromString(ip);
-  CONNECTED_AUDIO_IP = new_ip;
-}
-String getAudioIP(){
-  return CONNECTED_AUDIO_IP.toString() == "(IP unset)" ? "none" : CONNECTED_AUDIO_IP.toString();
-}
 colors getColors()
 {
   if (RESPONSIVE_MODE)
@@ -158,6 +150,24 @@ colors getColors()
   else
   {
     return STATIC_COLOR_VALUES;
+  }
+}
+
+void setAudioIP(String ip)
+{
+  CONNECTED_AUDIO_IP.fromString(ip);
+}
+
+String getAudioIP()
+{
+  String ip = CONNECTED_AUDIO_IP.toString();
+  if (ip == "(IP unset)" || "")
+  {
+    return "none";
+  }
+  else
+  {
+    return ip;
   }
 }
 
@@ -172,7 +182,7 @@ void textAllExceptClient(AsyncWebSocketClient *client, String text)
   }
 }
 
-void handleIncomingData(AsyncWebSocketClient *client, void *arg, uint8_t *data, size_t len)
+void onDataReceived(AsyncWebSocketClient *client, void *arg, uint8_t *data, size_t len)
 {
   AwsFrameInfo *info = (AwsFrameInfo *)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
@@ -193,18 +203,27 @@ void handleIncomingData(AsyncWebSocketClient *client, void *arg, uint8_t *data, 
     {
       setMode(value);
       textAllExceptClient(client, "MODE=" + getMode());
-      textAllExceptClient(client, "COLOR=" + getColors().getColorCode());
+      SERVER_WEBSOCKET.textAll("COLOR=" + getColors().getColorCode());
     }
     else if (parameter == "STATE")
     {
       setState(value);
       textAllExceptClient(client, "STATE=" + getState());
     }
-    else if (parameter == "AUDIO_SOURCE"){
+    else if (parameter == "AUDIO_SOURCE")
+    {
       setAudioIP(value);
       textAllExceptClient(client, "AUDIO_SOURCE=" + getAudioIP());
     }
   }
+}
+
+void onNewConnection(AsyncWebSocketClient *client)
+{
+  client->text("STATE=" + getState());
+  client->text("MODE=" + getMode());
+  client->text("COLOR=" + getColors().getColorCode());
+  client->text("AUDIO_SOURCE=" + getAudioIP());
 }
 
 void handleWebsocket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
@@ -213,23 +232,20 @@ void handleWebsocket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEv
   switch (type)
   {
   case WS_EVT_DATA:
-    handleIncomingData(client, arg, data, len);
+    onDataReceived(client, arg, data, len);
     break;
   case WS_EVT_CONNECT:
-    Serial.printf("Client %s connected with an ID of %u!\n", client->remoteIP().toString().c_str(), client->id());
-    client->text("STATE=" + getState());
-    client->text("MODE=" + getMode());
-    client->text("COLOR=" + getColors().getColorCode());
-    client->text("AUDIO_SOURCE=" + getAudioIP());
+    Serial.printf("Client %s connected with an ID of #%u!\n", client->remoteIP().toString().c_str(), client->id());
+    onNewConnection(client);
     break;
   case WS_EVT_DISCONNECT:
-    Serial.printf("Client %u disconnected!\n", client->id());
+    Serial.printf("Client #%u disconnected!\n", client->id());
     break;
   case WS_EVT_PONG:
-    Serial.printf("Pong! ID:%u!\n", client->id());
+    Serial.printf("Pong! ID:#%u!\n", client->id());
     break;
   case WS_EVT_ERROR:
-    Serial.printf("Error %u %s! Client ID:%u!\n", *((uint16_t *)arg), (char *)data, client->id());
+    Serial.printf("Error %u %s! Client ID:#%u!\n", *((uint16_t *)arg), (char *)data, client->id());
     break;
   }
 }
@@ -245,7 +261,7 @@ void setupPins()
 void connectToWiFi(const char *stassid, const char *stapsk,
                    const char *ip_str, const char *gateway_str, const char *subnet_str)
 {
-  Serial.println("Connecting to WiFi...");
+  Serial.print("Connecting to WiFi");
 
   WiFi.mode(WIFI_STA);
 
@@ -258,10 +274,25 @@ void connectToWiFi(const char *stassid, const char *stapsk,
   WiFi.config(ip, gateway, subnet);
   WiFi.begin(stassid, stapsk);
 
-  while (WiFi.waitForConnectResult() != WL_CONNECTED)
+  using esp8266::polledTimeout::oneShot;
+  oneShot timeout(30000); // number of milliseconds to wait before returning timeout error
+  while (!timeout)
   {
-    Serial.println("Connection Failed!");
+    Serial.print(".");
+    yield();
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      Serial.println();
+      break;
+    }
+    delay(500);
+  }
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.println("Timeout! Connection Failed!");
     restart();
+  }
+  else{
   }
 }
 

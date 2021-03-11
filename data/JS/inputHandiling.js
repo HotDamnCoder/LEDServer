@@ -17,12 +17,19 @@ MODE = ""
 function handleLEDSwitchInput(element) {
     setLEDState(element.checked);
 }
-function handleAudioButton() {
+function handleAudioButtonConnect() {
     var new_source = document.getElementById(AUDIO_SOURCE_INPUT_ID).value;
     updateAudioSource(new_source);
     setAudioSource(new_source);
 }
-
+function handleAudioButtonDisconnect() {
+    document.getElementById(AUDIO_SOURCE_INPUT_ID).value = "";
+    updateAudioSource("none");
+    setAudioSource("");
+}
+function handleAudioSourceInput(){
+    
+}
 function handleColorElementInput(element) {
     var current_value = getElementValue(element);
 
