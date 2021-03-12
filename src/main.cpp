@@ -392,7 +392,7 @@ void setupServer()
       request->send(LittleFS, "/index.html");
     }
   });
-  
+
   SERVER.serveStatic("/", LittleFS, "/");
 
   /* SERVER.onSslFileRequest([](void * arg, const char *filename, uint8_t **buf) -> int {

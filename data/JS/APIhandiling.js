@@ -4,12 +4,12 @@ apiSocket.onclose = handleAPIConnectionClose;
 apiSocket.onerror = handleAPIError;
 
 function handleAPIError(error){
-    alert(`An error occured in the api!\n ${error.message}`);
+    alert(`An error occured in the api!\n${error.message}`);
 }
 
 function handleAPIConnectionClose(close) {
     if (close.wasClean) {
-        alert("API connection closed! " + close.data  + " Please refresh the website.");
+        alert("API connection closed! " + close.message  + " Please refresh the website.");
     } else {
         alert('API connection died! Please refresh the website.');
     }
