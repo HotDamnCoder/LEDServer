@@ -1,3 +1,4 @@
+// #define ASYNC_TCP_SSL_ENABLED true
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -19,7 +20,7 @@
 #define GATEWAY "192.168.1.1"
 #define SUBNET "255.255.255.0"
 
-#define HTTPPORT 80
+#define HTTPPORT 80 // 443
 #define OTAPORT 8069
 #define UDPPORT 8888
 
@@ -173,18 +174,18 @@ String getAudioIP()
   }
 }
 
-void textAllExceptClient(AsyncWebSocketClient *client, String text)
+void APItextAllExceptClient(AsyncWebSocketClient *client, String text)
 {
   for (const auto &c : SERVER_WEBSOCKET.getClients())
   {
-    if (c->status() == WS_CONNECTED && c->id() != client->id())
+    if (c.status() == WS_CONNECTED && c.id() != client->id())
     {
-      SERVER_WEBSOCKET.text(c->id(), text);
+      SERVER_WEBSOCKET.text(c.id(), text);
     }
   }
 }
 
-void onDataReceived(AsyncWebSocketClient *client, void *arg, uint8_t *data, size_t len)
+void APIonDataReceived(AsyncWebSocketClient *client, void *arg, uint8_t *data, size_t len)
 {
   AwsFrameInfo *info = (AwsFrameInfo *)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
@@ -199,28 +200,28 @@ void onDataReceived(AsyncWebSocketClient *client, void *arg, uint8_t *data, size
     if (parameter == "COLOR")
     {
       setColor(value);
-      textAllExceptClient(client, "COLOR=" + getColors().getColorCode());
+      APItextAllExceptClient(client, "COLOR=" + getColors().getColorCode());
     }
     else if (parameter == "MODE")
     {
       setMode(value);
-      textAllExceptClient(client, "MODE=" + getMode());
+      APItextAllExceptClient(client, "MODE=" + getMode());
       SERVER_WEBSOCKET.textAll("COLOR=" + getColors().getColorCode());
     }
     else if (parameter == "STATE")
     {
       setState(value);
-      textAllExceptClient(client, "STATE=" + getState());
+      APItextAllExceptClient(client, "STATE=" + getState());
     }
     else if (parameter == "AUDIO_SOURCE")
     {
       setAudioIP(value);
-      textAllExceptClient(client, "AUDIO_SOURCE=" + getAudioIP());
+      APItextAllExceptClient(client, "AUDIO_SOURCE=" + getAudioIP());
     }
   }
 }
 
-void onNewConnection(AsyncWebSocketClient *client)
+void APIonNewConnection(AsyncWebSocketClient *client)
 {
   client->text("STATE=" + getState());
   client->text("MODE=" + getMode());
@@ -234,11 +235,11 @@ void handleWebsocket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEv
   switch (type)
   {
   case WS_EVT_DATA:
-    onDataReceived(client, arg, data, len);
+    APIonDataReceived(client, arg, data, len);
     break;
   case WS_EVT_CONNECT:
     Serial.printf("Client %s connected with an ID of #%u!\n", client->remoteIP().toString().c_str(), client->id());
-    onNewConnection(client);
+    APIonNewConnection(client);
     break;
   case WS_EVT_DISCONNECT:
     Serial.printf("Client #%u disconnected!\n", client->id());
@@ -294,7 +295,8 @@ void connectToWiFi(const char *stassid, const char *stapsk,
     Serial.println("Timeout! Connection Failed!");
     restart();
   }
-  else{
+  else
+  {
   }
 }
 
@@ -328,15 +330,21 @@ void setupArduinoOTA(const int port, const char *pass, const char *hostname)
       type = "filesystem";
     }
 
-    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    LittleFS.end();
+    SERVER_WEBSOCKET.enable(false);
+    SERVER_WEBSOCKET.closeAll(1001, "Closing server for OTA update!");
+
     Serial.println("Start updating " + type);
   });
+
   ArduinoOTA.onEnd([]() {
     Serial.println("\nEnd");
   });
+
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
+
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR)
@@ -371,6 +379,24 @@ void setupServer()
   SERVER.addHandler(&SERVER_WEBSOCKET);
 
   SERVER.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
+
+  /* SERVER.onSslFileRequest([](void * arg, const char *filename, uint8_t **buf) -> int {
+    Serial.printf("SSL File: %s\n", filename);
+    File file = LittleFS.open(filename, "r");
+    if(file){
+      size_t size = file.size();
+      uint8_t * nbuf = (uint8_t*)malloc(size);
+      if(nbuf){
+        size = file.read(nbuf, size);
+        file.close();
+        *buf = nbuf;
+        return size;
+      }
+      file.close();
+    }
+    *buf = 0;
+    return 0;
+  }, NULL); */
 }
 
 void setup(void)

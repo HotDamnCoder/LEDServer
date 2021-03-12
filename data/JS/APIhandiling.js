@@ -6,9 +6,10 @@ function handleConnectionClose(event) {
     if (event.wasClean) {
         alert("API connection closed! Please refresh the website.");
     } else {
-        alert('API connection died!' + event.data + ' Please refresh the website.');
+        alert('API connection died! ' + event.data + ' Please refresh the website.');
     }
 }
+
 function handleAPIMessage(message) {
     var [action, value] = message.data.split("=")
     switch (action) {
