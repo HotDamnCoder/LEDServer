@@ -1,12 +1,17 @@
 apiSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api`);
 apiSocket.onmessage = handleAPIMessage;
-apiSocket.onclose = handleConnectionClose;
+apiSocket.onclose = handleAPIConnectionClose;
+apiSocket.onerror = handleAPIError;
 
-function handleConnectionClose(event) {
-    if (event.wasClean) {
-        alert("API connection closed! Please refresh the website.");
+function handleAPIError(error){
+    alert(`An error occured in the api!\n ${error.message}`);
+}
+
+function handleAPIConnectionClose(close) {
+    if (close.wasClean) {
+        alert("API connection closed! " + close.data  + " Please refresh the website.");
     } else {
-        alert('API connection died! ' + event.data + ' Please refresh the website.');
+        alert('API connection died! Please refresh the website.');
     }
 }
 

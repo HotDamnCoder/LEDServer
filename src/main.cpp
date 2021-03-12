@@ -12,9 +12,14 @@
 #define B_LED_PIN D8
 
 #define HOSTNAME "esp8266"
+
 #define STASSID "***REMOVED***"
-#define STAPSK "***REMOVED***"
+#define STAPASS "***REMOVED***"
+
 #define OTAPASS "***REMOVED***"
+
+#define HTTP_USERNAME "***REMOVED***"
+#define HTTP_PASSWORD "***REMOVED***"
 
 #define IP "192.168.1.139"
 #define GATEWAY "192.168.1.1"
@@ -229,8 +234,8 @@ void APIonNewConnection(AsyncWebSocketClient *client)
   client->text("AUDIO_SOURCE=" + getAudioIP());
 }
 
-void handleWebsocket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
-                     void *arg, uint8_t *data, size_t len)
+void handleAPI(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
+               void *arg, uint8_t *data, size_t len)
 {
   switch (type)
   {
@@ -238,7 +243,7 @@ void handleWebsocket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEv
     APIonDataReceived(client, arg, data, len);
     break;
   case WS_EVT_CONNECT:
-    Serial.printf("Client %s connected with an ID of #%u!\n", client->remoteIP().toString().c_str(), client->id());
+    Serial.printf("Client %s connected to the API with an ID of #%u!\n", client->remoteIP().toString().c_str(), client->id());
     APIonNewConnection(client);
     break;
   case WS_EVT_DISCONNECT:
@@ -373,12 +378,22 @@ void setupArduinoOTA(const int port, const char *pass, const char *hostname)
 void setupServer()
 {
   Serial.println("Setting up the HTTP and WebSocket server...");
+  
+  SERVER_WEBSOCKET.onEvent(handleAPI);
 
-  SERVER_WEBSOCKET.onEvent(handleWebsocket);
+  SERVER_WEBSOCKET.setAuthentication(HTTP_USERNAME, HTTP_PASSWORD);
 
   SERVER.addHandler(&SERVER_WEBSOCKET);
 
-  SERVER.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
+  SERVER.on("/", [](AsyncWebServerRequest *request) {
+    if (!request->authenticate(HTTP_USERNAME, HTTP_PASSWORD))
+      return request->requestAuthentication();
+    else{
+      request->send(LittleFS, "/index.html");
+    }
+  });
+  
+  SERVER.serveStatic("/", LittleFS, "/");
 
   /* SERVER.onSslFileRequest([](void * arg, const char *filename, uint8_t **buf) -> int {
     Serial.printf("SSL File: %s\n", filename);
@@ -407,7 +422,7 @@ void setup(void)
   setupPins();
   setupLittleFS();
 
-  connectToWiFi(STASSID, STAPSK, IP, GATEWAY, SUBNET);
+  connectToWiFi(STASSID, STAPASS, IP, GATEWAY, SUBNET);
 
   setupArduinoOTA(OTAPORT, OTAPASS, HOSTNAME);
   setupServer();
