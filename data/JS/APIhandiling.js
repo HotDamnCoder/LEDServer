@@ -13,7 +13,7 @@ function handleAPIError(error) {
 function handleAPIConnectionClose(close) {
 
     if (API_SIDED_CLOSE_MESSAGE != "") {
-        alert(`API connection closed with the message: "${API_SIDED_CLOSE_MESSAGE}" `);
+        alert(`API connection closed with the message:\n"${API_SIDED_CLOSE_MESSAGE}"`);
         API_SIDED_CLOSE_MESSAGE = ""
     } else {
         alert('API connection died! Please refresh the website.');
