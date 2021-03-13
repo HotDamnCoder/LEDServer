@@ -69,9 +69,12 @@ button:focus,
 .input-group-text{
     width: 41px;
 }
-h6,
+h5,
 .navbar-brand,
 .nav-link,
 .form-check-label {
   user-select: none;
+}
+h5 br{
+    display: none !important;
 }

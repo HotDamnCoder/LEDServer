@@ -168,13 +168,13 @@ void setAudioIP(String ip)
 {
   IPAddress new_ip;
   new_ip.fromString(ip);
-  CONNECTED_AUDIO_IP.fromString(ip);
+  CONNECTED_AUDIO_IP = new_ip;
 }
 
 String getAudioIP()
 {
   String ip = CONNECTED_AUDIO_IP.toString();
-  if (ip == "(IP unset)" || "")
+  if (ip == "(IP unset)" || ip == "")
   {
     return "none";
   }
@@ -200,7 +200,7 @@ void APIonDataReceived(AsyncWebSocketClient *client, void *arg, uint8_t *data, s
   AwsFrameInfo *info = (AwsFrameInfo *)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
   {
-    data[len] = 0;
+    data[len] = '\0';
     String data_string = String((char *)data);
 
     int splitting_index = data_string.indexOf('=');
@@ -460,9 +460,10 @@ void loop(void)
     if (packetSize && UDPSERVER.remoteIP() == CONNECTED_AUDIO_IP)
     {
       char packet[packetSize];
+      packet[packetSize] = '\0';
       UDPSERVER.read(packet, packetSize);
       setColor(String(packet));
-      SERVER_WEBSOCKET.textAll("COLOR=" + getColors().getColorCode()); // * This doesn't need to exist. Just a place holder
+      SERVER_WEBSOCKET.textAll("COLOR=" + getColors().getColorCode());
     }
   }
   if (LEDS_ON)

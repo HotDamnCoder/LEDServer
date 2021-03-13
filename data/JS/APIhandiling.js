@@ -21,7 +21,7 @@ function handleAPIConnectionClose(close) {
 }
 
 function handleAPIMessage(message) {
-    if ("=" in message){
+    if (message.data.includes("=")){
         var [action, value] = message.data.split("=")
         switch (action) {
             case "COLOR":
