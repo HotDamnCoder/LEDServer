@@ -11,13 +11,17 @@
 #define G_LED_PIN D6
 #define B_LED_PIN D8
 #define W_LED_PIN D2
+
 #define HOSTNAME "esp8266"
+
+#define ROOM "240"
+#define NEXT_ROOM "241"
+#define NEXT_ROOM_URL ""
 
 #define STASSID "***REMOVED***"
 #define STAPASS "***REMOVED***"
 
-#define OTAPASS "***REMOVED***" // ! Change it to more secure
-
+#define OTAPASS "***REMOVED***"       // ! Change it to more secure
 #define HTTP_USERNAME "***REMOVED***" // ! Change it to more secure
 #define HTTP_PASSWORD "***REMOVED***"  // ! Change it to more secure
 
@@ -182,6 +186,35 @@ String getAudioIP()
   {
     return ip;
   }
+}
+
+String readFile(String filename)
+{
+  String content = "";
+  File file = LittleFS.open(filename, "r");
+  if (file)
+  {
+    content = file.readString();
+  }
+  return content;
+}
+
+String requestProcessor(const String &var)
+{
+  if (var == "ROOM")
+  {
+    return F(ROOM);
+  }
+  else if (var == "NEXT_ROOM")
+  {
+    return F(NEXT_ROOM);
+  }
+  else if (var == "NEXT_ROOM_URL")
+  {
+    return F(NEXT_ROOM_URL);
+  }
+
+  return String();
 }
 
 void APItextAllExceptClient(AsyncWebSocketClient *client, String text)
@@ -400,7 +433,7 @@ void setupServer()
       return request->requestAuthentication();
     else
     {
-      request->send(LittleFS, "/240_room.html");
+      request->send(LittleFS, "/room.html", String(), false, requestProcessor);
     }
   });
 
@@ -473,4 +506,3 @@ void loop(void)
 }
 
 // TODO: Add responsive color skewing based on website input.
-// TODO: Maybe dynamic html based on the room
