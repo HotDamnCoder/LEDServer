@@ -1,45 +1,55 @@
-apiSocket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api`);
-apiSocket.onmessage = handleAPIMessage;
-apiSocket.onclose = handleAPIConnectionClose;
-apiSocket.onerror = handleAPIError;
+API_SOCKET = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/api`);
+API_SOCKET.onmessage = handleAPIMessage;
+API_SOCKET.onclose = handleAPIConnectionClose;
+API_SOCKET.onerror = handleAPIError;
 
+API_SIDED_CLOSE_MESSAGE = ""
 function handleAPIError(error) {
-    alert(`An error occured in the api!\n${error.message}`);
+    if (API_SIDED_CLOSE_MESSAGE == ""){
+        alert(`An error occured in the api!\n${error.message}`);
+    }
 }
 
 function handleAPIConnectionClose(close) {
-    if (close.wasClean) {
-        alert(`API connection closed! ${close.message} Please refresh the website.`);
+
+    if (API_SIDED_CLOSE_MESSAGE != "") {
+        alert(`API connection closed! ${API_SIDED_CLOSE_MESSAGE} Please refresh the website.`);
+        API_SIDED_CLOSE_MESSAGE = ""
     } else {
         alert('API connection died! Please refresh the website.');
     }
 }
 
 function handleAPIMessage(message) {
-    var [action, value] = message.data.split("=")
-    switch (action) {
-        case "COLOR":
-            var [r, g, b] = getColorValuesFromMessage(value)
-            var [red_element, green_element, blue_element] = getAllColorElements()
-
-            updateColorForm(red_element, r);
-            updateColorForm(green_element, g);
-            updateColorForm(blue_element, b);
-            updateColorPicker();
-            break;
-        case "MODE":
-            updateTab(document.getElementById(value + SEPERATOR + TAB_SUFFIX), value);
-            MODE = value;
-            break;
-        case "STATE":
-            updateLEDSwitchState(value)
-            break;
-        case "AUDIO_SOURCE":
-            updateAudioSource(value);
-        default:
-            break;
+    if ("=" in message){
+        var [action, value] = message.data.split("=")
+        switch (action) {
+            case "COLOR":
+                var [r, g, b] = getColorValuesFromMessage(value)
+                var [red_element, green_element, blue_element] = getAllColorElements()
+    
+                updateColorForm(red_element, r);
+                updateColorForm(green_element, g);
+                updateColorForm(blue_element, b);
+                updateColorPicker();
+                break;
+            case "MODE":
+                updateTab(document.getElementById(value + SEPERATOR + TAB_SUFFIX), value);
+                MODE = value;
+                break;
+            case "STATE":
+                updateLEDSwitchState(value)
+                break;
+            case "AUDIO_SOURCE":
+                updateAudioSource(value);
+            default:
+                break;
+        }
     }
-
+    else{
+        API_SIDED_CLOSE_MESSAGE = message.data
+    }
+   
 }
 
 function getColorValuesFromMessage(message) {
@@ -56,29 +66,29 @@ function getColorValuesFromMessage(message) {
 }
 
 function APIisOpen() {
-    return apiSocket.readyState == 1
+    return API_SOCKET.readyState == 1
 }
 
 function setLEDRGB(r, g, b) {
     if (APIisOpen()) {
-        apiSocket.send(`COLOR=R${r}G${g}B${b}E`)
+        API_SOCKET.send(`COLOR=R${r}G${g}B${b}E`)
     }
 }
 
 function setLEDState(state) {
     if (APIisOpen()) {
-        apiSocket.send(`STATE=${state}`)
+        API_SOCKET.send(`STATE=${state}`)
     }
 }
 
 function setLEDMode(mode) {
     if (APIisOpen()) {
-        apiSocket.send(`MODE=${mode}`)
+        API_SOCKET.send(`MODE=${mode}`)
     }
 }
 
 function setAudioSource(source) {
     if (APIisOpen()) {
-        apiSocket.send(`AUDIO_SOURCE=${source}`)
+        API_SOCKET.send(`AUDIO_SOURCE=${source}`)
     }
 }

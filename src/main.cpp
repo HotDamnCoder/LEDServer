@@ -1,4 +1,4 @@
-// #define ASYNC_TCP_SSL_ENABLED true
+// * this is needed for HTTPS:  #define ASYNC_TCP_SSL_ENABLED true
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -16,21 +16,19 @@
 #define STASSID "***REMOVED***"
 #define STAPASS "***REMOVED***"
 
-#define OTAPASS "***REMOVED***"
+#define OTAPASS "***REMOVED***" // ! Change it to more secure
 
-#define HTTP_USERNAME "***REMOVED***"
-#define HTTP_PASSWORD "***REMOVED***"
+#define HTTP_USERNAME "***REMOVED***" // ! Change it to more secure
+#define HTTP_PASSWORD "***REMOVED***"  // ! Change it to more secure
 
-#define IP "192.168.1.139"
-#define GATEWAY "192.168.1.1"
-#define SUBNET "255.255.255.0"
+#define APIENDPOINT "/api"
 
-#define HTTPPORT 80 // 443
+#define HTTPPORT 80 // * HTTPS PORT 443
 #define OTAPORT 8069
 #define UDPPORT 8888
 
 AsyncWebServer SERVER(HTTPPORT);
-AsyncWebSocket SERVER_WEBSOCKET("/api");
+AsyncWebSocket SERVER_WEBSOCKET(APIENDPOINT);
 WiFiUDP UDPSERVER;
 
 IPAddress CONNECTED_AUDIO_IP;
@@ -267,23 +265,26 @@ void setupPins()
 }
 
 void connectToWiFi(const char *stassid, const char *stapsk,
-                   const char *ip_str, const char *gateway_str, const char *subnet_str)
+                   const char *ip_str = NULL, const char *gateway_str = NULL, const char *subnet_str = NULL)
 {
   Serial.print("Connecting to WiFi");
 
   WiFi.mode(WIFI_STA);
+  if (ip_str && gateway_str && subnet_str)
+  {
+    Serial.println("debug");
+    IPAddress ip, gateway, subnet;
 
-  IPAddress ip, gateway, subnet;
+    ip.fromString(ip_str);
+    gateway.fromString(gateway_str);
+    subnet.fromString(subnet_str);
 
-  ip.fromString(ip_str);
-  gateway.fromString(gateway_str);
-  subnet.fromString(subnet_str);
+    WiFi.config(ip, gateway, subnet);
+  }
 
-  WiFi.config(ip, gateway, subnet);
   WiFi.begin(stassid, stapsk);
 
-  using esp8266::polledTimeout::oneShot;
-  oneShot timeout(30000); // number of milliseconds to wait before returning timeout error
+  esp8266::polledTimeout::oneShot timeout(30000); // number of milliseconds to wait before returning timeout error
   while (!timeout)
   {
     Serial.print(".");
@@ -308,7 +309,6 @@ void connectToWiFi(const char *stassid, const char *stapsk,
 void setupLittleFS()
 {
   Serial.println("Setting up the LittleFS filesystem...");
-
   if (!LittleFS.begin())
   {
     Serial.println("LittleFS mount failed");
@@ -316,28 +316,31 @@ void setupLittleFS()
   }
 }
 
-void setupArduinoOTA(const int port, const char *pass, const char *hostname)
+void setupArduinoOTA(const int port = 0, const char *pass = NULL, const char *hostname = NULL)
 {
   Serial.println("Setting up ArduinoOTA...");
 
-  ArduinoOTA.setPort(port);
-  ArduinoOTA.setHostname(hostname);
-  ArduinoOTA.setPassword(pass);
+  // * Port defaults to 8266, pass to null and hostname to esp8266-xxxxxx
+  if (port)
+  {
+    ArduinoOTA.setPort(port);
+  }
+  if (hostname)
+  {
+    ArduinoOTA.setHostname(hostname);
+  }
+  if (pass)
+  {
+    ArduinoOTA.setPassword(pass);
+  }
 
   ArduinoOTA.onStart([]() {
-    String type;
-    if (ArduinoOTA.getCommand() == U_FLASH)
-    {
-      type = "sketch";
-    }
-    else
-    { // U_FS
-      type = "filesystem";
-    }
+    String type = ArduinoOTA.getCommand() == U_FLASH ? "sketch" : "filesystem";
 
     LittleFS.end();
+    SERVER_WEBSOCKET.textAll("OTA update incoming! Shutting server down!");
     SERVER_WEBSOCKET.enable(false);
-    SERVER_WEBSOCKET.closeAll(1001, "Closing server for OTA update!");
+    SERVER_WEBSOCKET.closeAll();
 
     Serial.println("Start updating " + type);
   });
@@ -377,8 +380,8 @@ void setupArduinoOTA(const int port, const char *pass, const char *hostname)
 
 void setupServer()
 {
-  Serial.println("Setting up the HTTP and WebSocket server...");
-  
+  Serial.println("Setting up the HTTP and API endpoint...");
+
   SERVER_WEBSOCKET.onEvent(handleAPI);
 
   SERVER_WEBSOCKET.setAuthentication(HTTP_USERNAME, HTTP_PASSWORD);
@@ -388,13 +391,15 @@ void setupServer()
   SERVER.on("/", [](AsyncWebServerRequest *request) {
     if (!request->authenticate(HTTP_USERNAME, HTTP_PASSWORD))
       return request->requestAuthentication();
-    else{
+    else
+    {
       request->send(LittleFS, "/240_room.html");
     }
   });
 
   SERVER.serveStatic("/", LittleFS, "/");
 
+  // * this is needed for https
   /* SERVER.onSslFileRequest([](void * arg, const char *filename, uint8_t **buf) -> int {
     Serial.printf("SSL File: %s\n", filename);
     File file = LittleFS.open(filename, "r");
@@ -422,7 +427,7 @@ void setup(void)
   setupPins();
   setupLittleFS();
 
-  connectToWiFi(STASSID, STAPASS, IP, GATEWAY, SUBNET);
+  connectToWiFi(STASSID, STAPASS);
 
   setupArduinoOTA(OTAPORT, OTAPASS, HOSTNAME);
   setupServer();
@@ -433,7 +438,9 @@ void setup(void)
 
   Serial.print("Ready!");
   Serial.print(" IP address: ");
-  Serial.println(WiFi.localIP());
+  Serial.print(WiFi.localIP());
+  Serial.print(" Hostname: ");
+  Serial.println(ArduinoOTA.getHostname());
 }
 
 void loop(void)
@@ -448,7 +455,7 @@ void loop(void)
       char packet[packetSize];
       UDPSERVER.read(packet, packetSize);
       setColor(String(packet));
-      SERVER_WEBSOCKET.textAll("COLOR=" + getColors().getColorCode());
+      SERVER_WEBSOCKET.textAll("COLOR=" + getColors().getColorCode()); // * This doesn't need to exist. Just a place holder
     }
   }
   if (LEDS_ON)
@@ -456,3 +463,6 @@ void loop(void)
     displayColor();
   }
 }
+
+// TODO: Add responsive color skewing based on website input.
+// TODO: Add the white part of RGBW
