@@ -3,72 +3,78 @@ span,
 input,
 .navbar-brand,
 .nav-link {
-    color: #F7EBE8 !important;
+  color: #f7ebe8 !important;
 }
 
 .nav-link:hover,
 .nav-link.active {
-    color: #E54B4B !important;
+  color: #e54b4b !important;
 }
 
 nav .nav-link:hover,
 nav .nav-link:focus {
-    color: #1E1E24 !important;
+  color: #1e1e24 !important;
 }
 
 body,
 span,
-input{
-    background-color: #011627 !important;
+input {
+  background-color: #011627 !important;
 }
 
-nav{
-    background-color: #E54B4B !important;
+nav {
+  background-color: #e54b4b !important;
 }
 
 .form-check-input {
-    background-color: #F7EBE8 !important;
+  background-color: #f7ebe8 !important;
 }
 
 .navbar-brand,
 .nav-link {
-    font-weight: bold;
+  font-weight: bold;
 }
+
 input[type="color"],
 iframe,
 .form-range {
-    height: 100%;
-    width: 100%;
-    padding: 0;
+  height: 100%;
+  width: 100%;
+  padding: 0;
 }
 
-iframe{
-    height: 85vh;
+iframe {
+  height: 85vh;
 }
+
 button:focus,
 .form-control:focus,
-.form-check-input:focus
- {
-    box-shadow: none !important;
+.form-check-input:focus {
+  box-shadow: none !important;
 }
 
 .form-check-input:focus {
-    border-color: rgb(247, 235, 232);
+  border-color: rgb(247, 235, 232);
 }
 
 button:focus,
-.form-control:focus{
-    border-color: #E54B4B !important;
+.form-control:focus {
+  border-color: #e54b4b !important;
 }
 
 .form-check-input:checked {
-    border-color: #FFA987 !important;
-    background-color: #FFA987 !important;
+  border-color: #ffa987 !important;
+  background-color: #ffa987 !important;
 }
-
-h6,
+.input-group-text{
+    width: 41px;
+}
+h5,
 .navbar-brand,
 .nav-link,
 .form-check-label {
-    user-select: none;
+  user-select: none;
+}
+h5 br{
+    display: none !important;
 }

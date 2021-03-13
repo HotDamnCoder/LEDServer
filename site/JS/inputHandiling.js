@@ -9,7 +9,8 @@ COLORPICKER_SUFFIX = 'colorPicker';
 COLOR_SUFFIXES = {
     'RED': 'R',
     'GREEN': 'G',
-    'BLUE': 'B'
+    'BLUE': 'B',
+    'WHITE': 'W'
 };
 
 MODE = "";
@@ -36,20 +37,21 @@ function handleColorElementInput(element) {
     updateColorForm(element, current_value);
     updateColorPicker();
 
-    var [r, g, b] = getCurrentColorValue();
-    setLEDRGB(r, g, b)
+    var [r, g, b, w] = getCurrentColorValue();
+    setLEDRGB(r, g, b, w)
 }
 
 function handleColorPickerInput(element) {
-    var [red_element, green_element, blue_element] = getAllColorElements();
+    var [red_element, green_element, blue_element, white_element] = getAllColorElements()
 
     var [r, g, b] = HEXtoRGB(element.value);
+    var w = white_element.value;
 
     updateColorForm(red_element, r);
     updateColorForm(green_element, g);
     updateColorForm(blue_element, b);
 
-    setLEDRGB(r, g, b);
+    setLEDRGB(r, g, b, w);
 }
 
 function updateLEDSwitchState(state) {
@@ -63,7 +65,7 @@ function updateAudioSource(ip) {
 }
 
 function updateColorPicker() {
-    var [red_element, green_element, blue_element] = getAllColorElements();
+    var [red_element, green_element, blue_element] = getAllColorElements().slice(0,3);
     var r = getElementValue(red_element);
     var g = getElementValue(green_element);
     var b = getElementValue(blue_element);
@@ -100,8 +102,9 @@ function getAllColorElements() {
     var red_element = document.getElementById(`${MODE}${SEPERATOR}${COLOR_SUFFIXES['RED']}${SEPERATOR}${NUMBER_TYPE_SUFFIX}`);
     var green_element = document.getElementById(`${MODE}${SEPERATOR}${COLOR_SUFFIXES['GREEN']}${SEPERATOR}${NUMBER_TYPE_SUFFIX}`);
     var blue_element = document.getElementById(`${MODE}${SEPERATOR}${COLOR_SUFFIXES['BLUE']}${SEPERATOR}${NUMBER_TYPE_SUFFIX}`);
+    var white_element = document.getElementById(`${MODE}${SEPERATOR}${COLOR_SUFFIXES['WHITE']}${SEPERATOR}${NUMBER_TYPE_SUFFIX}`);
 
-    return [red_element, green_element, blue_element];
+    return [red_element, green_element, blue_element, white_element];
 }
 
 function RGBtoHEX() {
