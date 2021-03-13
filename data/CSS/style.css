@@ -42,6 +42,9 @@ iframe,
     padding: 0;
 }
 
+iframe{
+    height: 85vh;
+}
 button:focus,
 .form-control:focus,
 .form-check-input:focus
@@ -69,4 +72,3 @@ h6,
 .form-check-label {
     user-select: none;
 }
-

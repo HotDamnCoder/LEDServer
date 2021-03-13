@@ -1,3 +1,4 @@
+SEPERATOR = '_';
 LED_SWITCH_ID = 'LEDSwitch'
 AUDIO_SOURCE_TEXT_ID = "AudioSource"
 AUDIO_SOURCE_INPUT_ID = "AudioSourceInput"
@@ -10,26 +11,25 @@ COLOR_SUFFIXES = {
     'GREEN': 'G',
     'BLUE': 'B'
 };
-SEPERATOR = '_';
 
-MODE = ""
+MODE = "";
 
 function handleLEDSwitchInput(element) {
     setLEDState(element.checked);
 }
+
 function handleAudioButtonConnect() {
     var new_source = document.getElementById(AUDIO_SOURCE_INPUT_ID).value;
     updateAudioSource(new_source);
     setAudioSource(new_source);
 }
+
 function handleAudioButtonDisconnect() {
     document.getElementById(AUDIO_SOURCE_INPUT_ID).value = "";
     updateAudioSource("none");
     setAudioSource("");
 }
-function handleAudioSourceInput(){
-    
-}
+
 function handleColorElementInput(element) {
     var current_value = getElementValue(element);
 
@@ -41,7 +41,7 @@ function handleColorElementInput(element) {
 }
 
 function handleColorPickerInput(element) {
-    var [red_element, green_element, blue_element] = getAllColorElements()
+    var [red_element, green_element, blue_element] = getAllColorElements();
 
     var [r, g, b] = HEXtoRGB(element.value);
 
@@ -50,11 +50,41 @@ function handleColorPickerInput(element) {
     updateColorForm(blue_element, b);
 
     setLEDRGB(r, g, b);
+}
 
+function updateLEDSwitchState(state) {
+    document.getElementById(LED_SWITCH_ID).checked = state == "true" ? true : false;
+}
+
+function updateAudioSource(ip) {
+    var inner_text = document.getElementById(AUDIO_SOURCE_TEXT_ID).innerText;
+    var prev_text = inner_text.split(" :")[0];
+    document.getElementById(AUDIO_SOURCE_TEXT_ID).innerText = `${prev_text} : ${ip}`;
+}
+
+function updateColorPicker() {
+    var [red_element, green_element, blue_element] = getAllColorElements();
+    var r = getElementValue(red_element);
+    var g = getElementValue(green_element);
+    var b = getElementValue(blue_element);
+
+    document.getElementById(`${MODE}${SEPERATOR}${COLORPICKER_SUFFIX}`).value = RGBtoHEX(r, g, b);
+}
+
+function updateColorForm(element, value) {
+    element.value = value;
+    updateOtherColorInput(element, value);
+}
+
+function updateOtherColorInput(element, value) {
+    var [tab_prefix, color, input_type] = element.getAttribute('id').split(SEPERATOR);
+    var input_type = element.getAttribute('type') == "number" ? RANGE_TYPE_SUFFIX : NUMBER_TYPE_SUFFIX;
+    var other_input_id = `${tab_prefix}${SEPERATOR}${color}${SEPERATOR}${input_type}`
+    document.getElementById(other_input_id).value = value;
 }
 
 function getCurrentColorValue() {
-    var color = []
+    var color = [];
     var color_elements = getAllColorElements();
     for (elementIndex in color_elements) {
         color.push(getElementValue(color_elements[elementIndex]));
@@ -67,45 +97,12 @@ function getElementValue(element) {
 }
 
 function getAllColorElements() {
-    var red_element = document.getElementById([MODE, COLOR_SUFFIXES['RED'], NUMBER_TYPE_SUFFIX].join(SEPERATOR))
-    var green_element = document.getElementById([MODE, COLOR_SUFFIXES['GREEN'], NUMBER_TYPE_SUFFIX].join(SEPERATOR))
-    var blue_element = document.getElementById([MODE, COLOR_SUFFIXES['BLUE'], NUMBER_TYPE_SUFFIX].join(SEPERATOR))
+    var red_element = document.getElementById(`${MODE}${SEPERATOR}${COLOR_SUFFIXES['RED']}${SEPERATOR}${NUMBER_TYPE_SUFFIX}`);
+    var green_element = document.getElementById(`${MODE}${SEPERATOR}${COLOR_SUFFIXES['GREEN']}${SEPERATOR}${NUMBER_TYPE_SUFFIX}`);
+    var blue_element = document.getElementById(`${MODE}${SEPERATOR}${COLOR_SUFFIXES['BLUE']}${SEPERATOR}${NUMBER_TYPE_SUFFIX}`);
 
-    return [red_element, green_element, blue_element]
+    return [red_element, green_element, blue_element];
 }
-
-function updateLEDSwitchState(state) {
-    document.getElementById(LED_SWITCH_ID).checked = state == "true" ? true : false;
-}
-
-function updateAudioSource(ip) {
-    var inner_text = document.getElementById(AUDIO_SOURCE_TEXT_ID).innerText;
-    var prev_text = inner_text.split(" :")[0];
-    document.getElementById(AUDIO_SOURCE_TEXT_ID).innerText = prev_text + " : " + ip;
-}
-
-function updateColorForm(element, value) {
-    element.value = value;
-    updateOtherColorInput(element, value)
-}
-
-function updateOtherColorInput(element, value) {
-    var [tab_prefix, color, input_type] = element.getAttribute('id').split(SEPERATOR);
-    var input_type = element.getAttribute('type') == NUMBER_TYPE_SUFFIX ? RANGE_TYPE_SUFFIX : NUMBER_TYPE_SUFFIX;
-    var other_input_id = [tab_prefix, color, input_type].join(SEPERATOR);
-
-    document.getElementById(other_input_id).value = value;
-}
-
-function updateColorPicker() {
-    var [red_element, green_element, blue_element] = getAllColorElements()
-    var r = getElementValue(red_element)
-    var g = getElementValue(green_element);
-    var b = getElementValue(blue_element);
-
-    document.getElementById(MODE + SEPERATOR + COLORPICKER_SUFFIX).value = RGBtoHEX(r, g, b);
-}
-
 
 function RGBtoHEX() {
     var hex = "#";
@@ -113,7 +110,6 @@ function RGBtoHEX() {
         hex += parseInt(arguments[i]).toString(16).padStart(2, '0');
     }
     return hex;
-
 }
 
 function HEXtoRGB(hex) {
@@ -123,10 +119,3 @@ function HEXtoRGB(hex) {
 
     return [r.toString(), g.toString(), b.toString()];
 }
-
-
-
-
-
-
-

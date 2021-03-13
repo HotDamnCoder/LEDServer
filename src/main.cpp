@@ -389,7 +389,7 @@ void setupServer()
     if (!request->authenticate(HTTP_USERNAME, HTTP_PASSWORD))
       return request->requestAuthentication();
     else{
-      request->send(LittleFS, "/index.html");
+      request->send(LittleFS, "/240_room.html");
     }
   });
 

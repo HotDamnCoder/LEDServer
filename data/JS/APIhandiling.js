@@ -3,13 +3,13 @@ apiSocket.onmessage = handleAPIMessage;
 apiSocket.onclose = handleAPIConnectionClose;
 apiSocket.onerror = handleAPIError;
 
-function handleAPIError(error){
+function handleAPIError(error) {
     alert(`An error occured in the api!\n${error.message}`);
 }
 
 function handleAPIConnectionClose(close) {
     if (close.wasClean) {
-        alert("API connection closed! " + close.message  + " Please refresh the website.");
+        alert(`API connection closed! ${close.message} Please refresh the website.`);
     } else {
         alert('API connection died! Please refresh the website.');
     }
@@ -19,15 +19,7 @@ function handleAPIMessage(message) {
     var [action, value] = message.data.split("=")
     switch (action) {
         case "COLOR":
-            var code_starts = value.indexOf('R');
-            var red_ends = value.indexOf('G');
-            var green_ends = value.indexOf('B');
-            var code_ends = value.indexOf('E');
-
-            var r = value.substring(code_starts + 1, red_ends)
-            var g = value.substring(red_ends + 1, green_ends)
-            var b = value.substring(green_ends + 1, code_ends)
-
+            var [r, g, b] = getColorValuesFromMessage(value)
             var [red_element, green_element, blue_element] = getAllColorElements()
 
             updateColorForm(red_element, r);
@@ -50,18 +42,43 @@ function handleAPIMessage(message) {
 
 }
 
+function getColorValuesFromMessage(message) {
+    var code_starts = message.indexOf('R');
+    var red_ends = message.indexOf('G');
+    var green_ends = message.indexOf('B');
+    var code_ends = message.indexOf('E');
+
+    var r = message.substring(code_starts + 1, red_ends);
+    var g = message.substring(red_ends + 1, green_ends);
+    var b = message.substring(green_ends + 1, code_ends);
+
+    return [r, g, b];
+}
+
+function APIisOpen() {
+    return apiSocket.readyState == 1
+}
+
 function setLEDRGB(r, g, b) {
-    apiSocket.send(`COLOR=R${r}G${g}B${b}E`)
+    if (APIisOpen()) {
+        apiSocket.send(`COLOR=R${r}G${g}B${b}E`)
+    }
 }
 
 function setLEDState(state) {
-    apiSocket.send(`STATE=${state}`)
+    if (APIisOpen()) {
+        apiSocket.send(`STATE=${state}`)
+    }
 }
 
 function setLEDMode(mode) {
-    apiSocket.send(`MODE=${mode}`)
+    if (APIisOpen()) {
+        apiSocket.send(`MODE=${mode}`)
+    }
 }
 
 function setAudioSource(source) {
-    apiSocket.send(`AUDIO_SOURCE=${source}`)
+    if (APIisOpen()) {
+        apiSocket.send(`AUDIO_SOURCE=${source}`)
+    }
 }

@@ -3,26 +3,26 @@ function handleTabSwitch(tab, target_content) {
     MODE = target_content;
     setLEDMode(target_content);
 }
+
 function updateTab(tab, target_content) {
-    deactivateTabs();
+    deactivateTabs(tab);
     activateTab(tab, target_content);
 }
 
-function deactivateTabs() {
-    deactivateTabLinks();
-    deactivateTabContents();
+function deactivateTabs(tab) {
+    deactivateTabLinks(tab);
+    deactivateTabContents(tab);
 }
 
-function deactivateTabLinks() {
-    tabs = document.getElementsByClassName('nav-tabs')[0].children;
-    for (i = 0; i < tabs.length; i++) {
-        tabs[i].firstElementChild.className = 'nav-link';
+function deactivateTabLinks(tab) {
+    tab_links = tab.parentElement.parentElement.children;
+    for (i = 0; i < tab_links.length; i++) {
+        tab_links[i].firstElementChild.className = 'nav-link';
     }
 }
 
-function deactivateTabContents() {
-    tab_content_element = document.getElementsByClassName("tab-content")[0];
-    tab_panes = tab_content_element.children;
+function deactivateTabContents(tab) {
+    tab_panes = tab.parentElement.parentElement.nextElementSibling.children;
     for (i = 0; i < tab_panes.length; i++) {
         tab_panes[i].className = "tab-pane"
     }
@@ -38,5 +38,8 @@ function activateTabLink(tab) {
 }
 
 function activateTabContent(target_tab_content) {
-    document.getElementById(target_tab_content).className = "tab-pane active"
+    target_tab_content_element = document.getElementById(target_tab_content);
+    if (target_tab_content_element != null){
+        target_tab_content_element.className = "tab-pane active"
+    }
 }
