@@ -10,7 +10,7 @@
 #define R_LED_PIN D5
 #define G_LED_PIN D6
 #define B_LED_PIN D8
-
+#define W_LED_PIN D2
 #define HOSTNAME "esp8266"
 
 #define STASSID "***REMOVED***"
@@ -41,17 +41,19 @@ struct colors
   int r = 0;
   int g = 0;
   int b = 0;
+  int w = 0;
 
   String getColorCode()
   {
-    return "R" + String(r) + "G" + String(g) + "B" + String(b) + "E";
+    return "R" + String(r) + "G" + String(g) + "B" + String(b) + "W" + String(w) + "E";
   }
 
-  void setColors(int r_value, int g_value, int b_value)
+  void setColors(int r_value, int g_value, int b_value, int w_value)
   {
     r = r_value;
     g = g_value;
     b = b_value;
+    w = w_value;
   }
 
   void setColorsFromCode(String code)
@@ -59,11 +61,13 @@ struct colors
     int code_starts = code.indexOf('R');
     int red_ends = code.indexOf('G');
     int green_ends = code.indexOf('B');
+    int blue_ends = code.indexOf('W');
     int code_ends = code.indexOf('E');
 
     r = code.substring(code_starts + 1, red_ends).toInt();
     g = code.substring(red_ends + 1, green_ends).toInt();
-    b = code.substring(green_ends + 1, code_ends).toInt();
+    b = code.substring(green_ends + 1, blue_ends).toInt();
+    w = code.substring(blue_ends + 1, code_ends).toInt();
   }
 } RESPONSIVE_COLOR_VALUES, STATIC_COLOR_VALUES;
 
@@ -79,6 +83,7 @@ void turnOffLeds()
   analogWrite(R_LED_PIN, 0);
   analogWrite(G_LED_PIN, 0);
   analogWrite(B_LED_PIN, 0);
+  analogWrite(W_LED_PIN, 0);
 }
 
 void displayColor()
@@ -88,12 +93,14 @@ void displayColor()
     analogWrite(R_LED_PIN, RESPONSIVE_COLOR_VALUES.r);
     analogWrite(G_LED_PIN, RESPONSIVE_COLOR_VALUES.g);
     analogWrite(B_LED_PIN, RESPONSIVE_COLOR_VALUES.b);
+    analogWrite(W_LED_PIN, RESPONSIVE_COLOR_VALUES.w);
   }
   else
   {
     analogWrite(R_LED_PIN, STATIC_COLOR_VALUES.r);
     analogWrite(G_LED_PIN, STATIC_COLOR_VALUES.g);
     analogWrite(B_LED_PIN, STATIC_COLOR_VALUES.b);
+    analogWrite(W_LED_PIN, STATIC_COLOR_VALUES.w);
   }
 }
 
@@ -121,15 +128,15 @@ String getMode()
   return RESPONSIVE_MODE ? "RESPONSIVE" : "STATIC";
 }
 
-void setColor(int r, int g, int b)
+void setColor(int r, int g, int b, int w)
 {
   if (RESPONSIVE_MODE)
   {
-    RESPONSIVE_COLOR_VALUES.setColors(r, g, b);
+    RESPONSIVE_COLOR_VALUES.setColors(r, g, b, w);
   }
   else
   {
-    STATIC_COLOR_VALUES.setColors(r, g, b);
+    STATIC_COLOR_VALUES.setColors(r, g, b, w);
   }
 }
 
@@ -465,4 +472,4 @@ void loop(void)
 }
 
 // TODO: Add responsive color skewing based on website input.
-// TODO: Add the white part of RGBW
+// TODO: Maybe dynamic html based on the room
