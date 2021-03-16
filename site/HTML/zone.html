@@ -1,179 +1,360 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
-    <link href="/site/CSS/style.css" rel="stylesheet">
-    <script src="/site/JS/inputHandiling.js"></script>
-    <script src="/site/JS/tabHandling.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl"
+      crossorigin="anonymous"
+    />
+    <link href="/CSS/style.css" rel="stylesheet" />
+    <script src="/JS/inputHandiling.js"></script>
+    <script src="/JS/tabHandling.js"></script>
 
     <title>Pedemajaka controlroom</title>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="container pt-3">
-        <ul class="nav nav-tabs">
-            <li style="width: 50%;" class="nav-item">
-                <button style="width: 100%;" id="STATIC_tab" class="nav-link" onclick="handleTabSwitch(this, 'STATIC');"
-                    type="button">Static
-                    LED color control</button>
-            </li>
-            <li style="width: 50%;" class="nav-item">
-                <button style="width: 100%;" id="RESPONSIVE_tab" class="nav-link"
-                    onclick="handleTabSwitch(this, 'RESPONSIVE');" type="button">Audio responsive LED color
-                    control</button>
-            </li>
-        </ul>
-        <div class="tab-content pt-3">
-            <div class="tab-pane" id="STATIC">
-                <div class="container pt-2">
-                    <div class="row">
-                        <div class="col-auto" style="width: 60%;">
-                            <div class="row">
-                                <div class="col">
-                                    <div class="input-group">
-                                        <span class="input-group-text">R</span>
-                                        <input class="form-control" id="STATIC_R_number" type="number" min="0" max="255"
-                                            value="0" oninput="handleColorElementInput(this)">
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <input class="form-range" id="STATIC_R_range" type="range" min="0" max="255"
-                                        value="0" oninput="handleColorElementInput(this)">
-                                </div>
-                            </div>
-                            <div class="row pt-2">
-                                <div class="col">
-                                    <div class="input-group">
-                                        <span class="input-group-text">G</span>
-                                        <input id="STATIC_G_number" type="number" class="form-control" min="0" max="255"
-                                            value="0" oninput="handleColorElementInput(this)">
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <input id="STATIC_G_range" type="range" class="form-range" min="0" max="255"
-                                        value="0" oninput="handleColorElementInput(this)">
-                                </div>
-                            </div>
-                            <div class="row pt-2">
-                                <div class="col">
-                                    <div class="input-group">
-                                        <span class="input-group-text">B</span>
-                                        <input id="STATIC_B_number" type="number" class="form-control" min="0" max="255"
-                                            value="0" oninput="handleColorElementInput(this)">
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <input id="STATIC_B_range" type="range" class="form-range" min="0" max="255"
-                                        value="0" oninput="handleColorElementInput(this)">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-auto" style="width: 40%;">
-                            <input id="STATIC_colorPicker" type="color" class="form-control" value="#000000"
-                                oninput="handleColorPickerInput(this)">
-                        </div>
+      <ul class="nav nav-tabs">
+        <li style="width: 50%" class="nav-item">
+          <button
+            style="width: 100%"
+            id="STATIC_tab"
+            class="nav-link"
+            onclick="handleTabSwitch(this, 'STATIC');"
+            type="button"
+          >
+            Static LED color control
+          </button>
+        </li>
+        <li style="width: 50%" class="nav-item">
+          <button
+            style="width: 100%"
+            id="RESPONSIVE_tab"
+            class="nav-link"
+            onclick="handleTabSwitch(this, 'RESPONSIVE');"
+            type="button"
+          >
+            Audio responsive LED color control
+          </button>
+        </li>
+      </ul>
+      <div class="tab-content pt-3">
+        <div class="tab-pane" id="STATIC">
+          <div class="container pt-2">
+            <div class="row">
+              <div class="col-auto" style="width: 60%">
+                <div class="row">
+                  <div class="col">
+                    <div class="input-group">
+                      <span class="input-group-text">R</span>
+                      <input
+                        class="form-control"
+                        id="STATIC_R_number"
+                        type="number"
+                        min="0"
+                        max="255"
+                        value="0"
+                        oninput="handleColorElementInput(this)"
+                      />
                     </div>
+                  </div>
+                  <div class="col">
+                    <input
+                      class="form-range"
+                      id="STATIC_R_range"
+                      type="range"
+                      min="0"
+                      max="255"
+                      value="0"
+                      oninput="handleColorElementInput(this)"
+                    />
+                  </div>
                 </div>
+                <div class="row pt-2">
+                  <div class="col">
+                    <div class="input-group">
+                      <span class="input-group-text">G</span>
+                      <input
+                        id="STATIC_G_number"
+                        type="number"
+                        class="form-control"
+                        min="0"
+                        max="255"
+                        value="0"
+                        oninput="handleColorElementInput(this)"
+                      />
+                    </div>
+                  </div>
+                  <div class="col">
+                    <input
+                      id="STATIC_G_range"
+                      type="range"
+                      class="form-range"
+                      min="0"
+                      max="255"
+                      value="0"
+                      oninput="handleColorElementInput(this)"
+                    />
+                  </div>
+                </div>
+                <div class="row pt-2">
+                  <div class="col">
+                    <div class="input-group">
+                      <span class="input-group-text">B</span>
+                      <input
+                        id="STATIC_B_number"
+                        type="number"
+                        class="form-control"
+                        min="0"
+                        max="255"
+                        value="0"
+                        oninput="handleColorElementInput(this)"
+                      />
+                    </div>
+                  </div>
+                  <div class="col">
+                    <input
+                      id="STATIC_B_range"
+                      type="range"
+                      class="form-range"
+                      min="0"
+                      max="255"
+                      value="0"
+                      oninput="handleColorElementInput(this)"
+                    />
+                  </div>
+                </div>
+                <div class="row pt-2">
+                  <div class="col">
+                    <div class="input-group">
+                      <span class="input-group-text">W</span>
+                      <input
+                        id="STATIC_W_number"
+                        type="number"
+                        class="form-control"
+                        min="0"
+                        max="255"
+                        value="0"
+                        oninput="handleColorElementInput(this)"
+                      />
+                    </div>
+                  </div>
+                  <div class="col">
+                    <input
+                      id="STATIC_W_range"
+                      type="range"
+                      class="form-range"
+                      min="0"
+                      max="255"
+                      value="0"
+                      oninput="handleColorElementInput(this)"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="col-auto" style="width: 40%">
+                <input
+                  id="STATIC_colorPicker"
+                  type="color"
+                  class="form-control"
+                  value="#000000"
+                  oninput="handleColorPickerInput(this)"
+                />
+              </div>
             </div>
-            <div class="tab-pane" id="RESPONSIVE">
-                <div class="container pt-2">
-                    <div class="row">
-                        <div class="col-auto" style="width: 60%;">
-                            <div class="row">
-                                <div class="col">
-                                    <div class="input-group">
-                                        <span class="input-group-text">R</span>
-                                        <input class="form-control" id="RESPONSIVE_R_number" type="number" min="0"
-                                            max="255" value="0" oninput="handleColorElementInput(this)">
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <input class="form-range" id="RESPONSIVE_R_range" type="range" min="0" max="255"
-                                        value="0" oninput="handleColorElementInput(this)">
-                                </div>
-                            </div>
-                            <div class="row pt-2">
-                                <div class="col">
-                                    <div class="input-group">
-                                        <span class="input-group-text">G</span>
-                                        <input id="RESPONSIVE_G_number" type="number" class="form-control" min="0"
-                                            max="255" value="0" oninput="handleColorElementInput(this)">
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <input id="RESPONSIVE_G_range" type="range" class="form-range" min="0" max="255"
-                                        value="0" oninput="handleColorElementInput(this)">
-                                </div>
-                            </div>
-                            <div class="row pt-2">
-                                <div class="col">
-                                    <div class="input-group">
-                                        <span class="input-group-text">B</span>
-                                        <input id="RESPONSIVE_B_number" type="number" class="form-control" min="0"
-                                            max="255" value="0" oninput="handleColorElementInput(this)">
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <input id="RESPONSIVE_B_range" type="range" class="form-range" min="0" max="255"
-                                        value="0" oninput="handleColorElementInput(this)">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-auto" style="width: 40%;">
-                            <input id="RESPONSIVE_colorPicker" type="color" class="form-control" value="#000000"
-                                oninput="handleColorPickerInput(this)">
-                        </div>
-                    </div>
-                </div>
-                <div class="container pt-4">
-                    <div class="row">
-                        <div class="col-auto pt-2">
-                            <div class="row">
-                                <div class="col">
-                                    <h5 id="AudioSource" class="position-relative top-50 start-50 translate-middle">
-                                        Currently connected device : none
-                                    </h5>
-                                </div>
-                                <div class="col-auto">
-                                    <button type="button" class="btn btn-light"
-                                        onclick="handleAudioButtonDisconnect()">Disonnect</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-auto pt-2">
-                            <div class="row">
-                                <div class="col">
-                                    <form action="javascript:handleAudioButtonConnect()">
-                                        <div class="input-group">
-                                            <span class="input-group-text">IP</span>
-                                            <input pattern="(\d{1,3}\.){3}(\d{1,3})" title="Valid IP address please!"
-                                                id="AudioSourceInput" type="text" class="form-control"
-                                                onchange=handleAudioSourceInput() required>
-                                            <button type="submit" class="btn btn-light">Connect</button>
-                                        </div>
-                                    </form>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
-        <div class="container pt-3">
-            <div class="form-check form-switch">
-                <input id="LEDSwitch" class="form-check-input" type="checkbox" oninput="handleLEDSwitchInput(this)"
-                    checked="true">
-                <label class="form-check-label" for="LEDSwitch">LED</label>
+        <div class="tab-pane" id="RESPONSIVE">
+          <div class="container pt-2">
+            <div class="row">
+              <div class="col-auto" style="width: 60%">
+                <div class="row">
+                  <div class="col">
+                    <div class="input-group">
+                      <span class="input-group-text">R</span>
+                      <input
+                        class="form-control"
+                        id="RESPONSIVE_R_number"
+                        type="number"
+                        min="-255"
+                        max="255"
+                        value="0"
+                        oninput="handleColorElementInput(this)"
+                      />
+                    </div>
+                  </div>
+                  <div class="col">
+                    <input
+                      class="form-range"
+                      id="RESPONSIVE_R_range"
+                      type="range"
+                      min="-255"
+                      max="255"
+                      value="0"
+                      oninput="handleColorElementInput(this)"
+                    />
+                  </div>
+                </div>
+                <div class="row pt-2">
+                  <div class="col">
+                    <div class="input-group">
+                      <span class="input-group-text">G</span>
+                      <input
+                        id="RESPONSIVE_G_number"
+                        type="number"
+                        class="form-control"
+                        min="-255"
+                        max="255"
+                        value="0"
+                        oninput="handleColorElementInput(this)"
+                      />
+                    </div>
+                  </div>
+                  <div class="col">
+                    <input
+                      id="RESPONSIVE_G_range"
+                      type="range"
+                      class="form-range"
+                      min="-255"
+                      max="255"
+                      value="0"
+                      oninput="handleColorElementInput(this)"
+                    />
+                  </div>
+                </div>
+                <div class="row pt-2">
+                  <div class="col">
+                    <div class="input-group">
+                      <span class="input-group-text">B</span>
+                      <input
+                        id="RESPONSIVE_B_number"
+                        type="number"
+                        class="form-control"
+                        min="-255"
+                        max="255"
+                        value="0"
+                        oninput="handleColorElementInput(this)"
+                      />
+                    </div>
+                  </div>
+                  <div class="col">
+                    <input
+                      id="RESPONSIVE_B_range"
+                      type="range"
+                      class="form-range"
+                      min="-255"
+                      max="255"
+                      value="0"
+                      oninput="handleColorElementInput(this)"
+                    />
+                  </div>
+                </div>
+                <div class="row pt-2">
+                  <div class="col">
+                    <div class="input-group">
+                      <span class="input-group-text">W</span>
+                      <input
+                        id="RESPONSIVE_W_number"
+                        type="number"
+                        class="form-control"
+                        min="-255"
+                        max="255"
+                        value="0"
+                        oninput="handleColorElementInput(this)"
+                      />
+                    </div>
+                  </div>
+                  <div class="col">
+                    <input
+                      id="RESPONSIVE_W_range"
+                      type="range"
+                      class="form-range"
+                      min="-255"
+                      max="255"
+                      value="0"
+                      oninput="handleColorElementInput(this)"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="col-auto" style="width: 40%">
+                <input
+                  id="RESPONSIVE_colorPicker"
+                  type="color"
+                  class="form-control"
+                  value="#000000"
+                  oninput="handleColorPickerInput(this)"
+                />
+              </div>
             </div>
+          </div>
+          <div class="container pt-4">
+            <div class="row">
+              <div class="col-auto pt-2">
+                <div class="row">
+                  <div class="col">
+                    <h5
+                      id="AudioSource"
+                      class="position-relative top-50 start-50 translate-middle"
+                    >
+                      Currently connected device : none
+                    </h5>
+                  </div>
+                  <div class="col-auto">
+                    <button
+                      type="button"
+                      class="btn btn-light"
+                      onclick="handleAudioButtonDisconnect()"
+                    >
+                      Disonnect
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-auto pt-2">
+                <div class="row">
+                  <div class="col">
+                    <form action="javascript:handleAudioButtonConnect()">
+                      <div class="input-group">
+                        <span class="input-group-text">IP</span>
+                        <input
+                          pattern="(\d{1,3}\.){3}(\d{1,3})"
+                          title="Valid IP address please!"
+                          id="AudioSourceInput"
+                          type="text"
+                          class="form-control"
+                          required
+                        />
+                        <button type="submit" class="btn btn-light">
+                          Connect
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+      <div class="container pt-3">
+        <div class="form-check form-switch">
+          <input
+            id="LEDSwitch"
+            class="form-check-input"
+            type="checkbox"
+            oninput="handleLEDSwitchInput(this)"
+            checked="true"
+          />
+          <label class="form-check-label" for="LEDSwitch">LED</label>
+        </div>
+      </div>
     </div>
-    <script src="/site/JS/APIhandiling.js"></script>
-</body>
-
+    <script src="/JS/APIhandiling.js"></script>
+  </body>
 </html>

@@ -66,8 +66,8 @@ button:focus,
   border-color: #ffa987 !important;
   background-color: #ffa987 !important;
 }
-.input-group-text{
-    width: 41px;
+.input-group-text {
+  width: 41px;
 }
 h5,
 .navbar-brand,
@@ -75,6 +75,6 @@ h5,
 .form-check-label {
   user-select: none;
 }
-h5 br{
-    display: none !important;
+h5 br {
+  display: none !important;
 }

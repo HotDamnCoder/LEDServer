@@ -40,6 +40,19 @@ IPAddress CONNECTED_AUDIO_IP;
 bool LEDS_ON = true;
 bool RESPONSIVE_MODE = true;
 
+int validateNumber(int number)
+{
+  if (number > 255)
+  {
+    return 255;
+  }
+  else if (number < 0)
+  {
+    return 0;
+  }
+  return number;
+}
+
 struct colors
 {
   int r = 0;
@@ -68,12 +81,14 @@ struct colors
     int blue_ends = code.indexOf('W');
     int code_ends = code.indexOf('E');
 
-    r = code.substring(code_starts + 1, red_ends).toInt();
-    g = code.substring(red_ends + 1, green_ends).toInt();
-    b = code.substring(green_ends + 1, blue_ends).toInt();
-    w = code.substring(blue_ends + 1, code_ends).toInt();
+    int r_value = code.substring(code_starts + 1, red_ends).toInt();
+    int g_value = code.substring(red_ends + 1, green_ends).toInt();
+    int b_value = code.substring(green_ends + 1, blue_ends).toInt();
+    int w_value = code.substring(blue_ends + 1, code_ends).toInt();
+
+    setColors(r_value, g_value, b_value, w_value);
   }
-} RESPONSIVE_COLOR_VALUES, STATIC_COLOR_VALUES;
+} RESPONSIVE_SKEWING_VALUES, RESPONSIVE_COLOR_VALUES, STATIC_COLOR_VALUES;
 
 void restart()
 {
@@ -94,10 +109,10 @@ void displayColor()
 {
   if (RESPONSIVE_MODE)
   {
-    analogWrite(R_LED_PIN, RESPONSIVE_COLOR_VALUES.r);
-    analogWrite(G_LED_PIN, RESPONSIVE_COLOR_VALUES.g);
-    analogWrite(B_LED_PIN, RESPONSIVE_COLOR_VALUES.b);
-    analogWrite(W_LED_PIN, RESPONSIVE_COLOR_VALUES.w);
+    analogWrite(R_LED_PIN, validateNumber(RESPONSIVE_COLOR_VALUES.r + RESPONSIVE_SKEWING_VALUES.r));
+    analogWrite(G_LED_PIN, validateNumber(RESPONSIVE_COLOR_VALUES.g + RESPONSIVE_SKEWING_VALUES.g));
+    analogWrite(B_LED_PIN, validateNumber(RESPONSIVE_COLOR_VALUES.b + RESPONSIVE_SKEWING_VALUES.b));
+    analogWrite(W_LED_PIN, validateNumber(RESPONSIVE_COLOR_VALUES.w + RESPONSIVE_SKEWING_VALUES.w));
   }
   else
   {
@@ -132,23 +147,11 @@ String getMode()
   return RESPONSIVE_MODE ? "RESPONSIVE" : "STATIC";
 }
 
-void setColor(int r, int g, int b, int w)
-{
-  if (RESPONSIVE_MODE)
-  {
-    RESPONSIVE_COLOR_VALUES.setColors(r, g, b, w);
-  }
-  else
-  {
-    STATIC_COLOR_VALUES.setColors(r, g, b, w);
-  }
-}
-
 void setColor(String code)
 {
   if (RESPONSIVE_MODE)
   {
-    RESPONSIVE_COLOR_VALUES.setColorsFromCode(code);
+    RESPONSIVE_SKEWING_VALUES.setColorsFromCode(code);
   }
   else
   {
@@ -160,7 +163,7 @@ colors getColors()
 {
   if (RESPONSIVE_MODE)
   {
-    return RESPONSIVE_COLOR_VALUES;
+    return RESPONSIVE_SKEWING_VALUES;
   }
   else
   {
@@ -186,17 +189,6 @@ String getAudioIP()
   {
     return ip;
   }
-}
-
-String readFile(String filename)
-{
-  String content = "";
-  File file = LittleFS.open(filename, "r");
-  if (file)
-  {
-    content = file.readString();
-  }
-  return content;
 }
 
 String requestProcessor(const String &var)
@@ -495,8 +487,7 @@ void loop(void)
       char packet[packetSize];
       packet[packetSize] = '\0';
       UDPSERVER.read(packet, packetSize);
-      setColor(String(packet));
-      SERVER_WEBSOCKET.textAll("COLOR=" + getColors().getColorCode());
+      RESPONSIVE_COLOR_VALUES.setColorsFromCode(String(packet));
     }
   }
   if (LEDS_ON)
@@ -504,5 +495,3 @@ void loop(void)
     displayColor();
   }
 }
-
-// TODO: Add responsive color skewing based on website input.
