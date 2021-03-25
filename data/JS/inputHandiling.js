@@ -1,4 +1,4 @@
-SEPERATOR = "_";
+SEPARATOR = "_";
 LED_SWITCH_ID = "LEDSwitch";
 AUDIO_SOURCE_TEXT_ID = "AudioSource";
 AUDIO_SOURCE_INPUT_ID = "AudioSourceInput";
@@ -82,7 +82,7 @@ function updateColorPicker() {
   var b = Math.max(0, getElementValue(blue_element));
 
   document.getElementById(
-    `${MODE}${SEPERATOR}${COLORPICKER_SUFFIX}`
+    `${MODE}${SEPARATOR}${COLORPICKER_SUFFIX}`
   ).value = RGBtoHEX(r, g, b);
 }
 
@@ -94,12 +94,12 @@ function updateColorForm(element, value) {
 function updateOtherColorInput(element, value) {
   var [tab_prefix, color, input_type] = element
     .getAttribute("id")
-    .split(SEPERATOR);
+    .split(SEPARATOR);
   var input_type =
     element.getAttribute("type") == "number"
       ? RANGE_TYPE_SUFFIX
       : NUMBER_TYPE_SUFFIX;
-  var other_input_id = `${tab_prefix}${SEPERATOR}${color}${SEPERATOR}${input_type}`;
+  var other_input_id = `${tab_prefix}${SEPARATOR}${color}${SEPARATOR}${input_type}`;
   document.getElementById(other_input_id).value = value;
 }
 
@@ -124,16 +124,16 @@ function getElementValue(element) {
 
 function getAllColorElements() {
   var red_element = document.getElementById(
-    `${MODE}${SEPERATOR}${COLOR_SUFFIXES["RED"]}${SEPERATOR}${NUMBER_TYPE_SUFFIX}`
+    `${MODE}${SEPARATOR}${COLOR_SUFFIXES["RED"]}${SEPARATOR}${NUMBER_TYPE_SUFFIX}`
   );
   var green_element = document.getElementById(
-    `${MODE}${SEPERATOR}${COLOR_SUFFIXES["GREEN"]}${SEPERATOR}${NUMBER_TYPE_SUFFIX}`
+    `${MODE}${SEPARATOR}${COLOR_SUFFIXES["GREEN"]}${SEPARATOR}${NUMBER_TYPE_SUFFIX}`
   );
   var blue_element = document.getElementById(
-    `${MODE}${SEPERATOR}${COLOR_SUFFIXES["BLUE"]}${SEPERATOR}${NUMBER_TYPE_SUFFIX}`
+    `${MODE}${SEPARATOR}${COLOR_SUFFIXES["BLUE"]}${SEPARATOR}${NUMBER_TYPE_SUFFIX}`
   );
   var white_element = document.getElementById(
-    `${MODE}${SEPERATOR}${COLOR_SUFFIXES["WHITE"]}${SEPERATOR}${NUMBER_TYPE_SUFFIX}`
+    `${MODE}${SEPARATOR}${COLOR_SUFFIXES["WHITE"]}${SEPARATOR}${NUMBER_TYPE_SUFFIX}`
   );
 
   return [red_element, green_element, blue_element, white_element];

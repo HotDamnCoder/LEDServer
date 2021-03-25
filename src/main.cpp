@@ -1,4 +1,3 @@
-// * this is needed for HTTPS:  #define ASYNC_TCP_SSL_ENABLED true
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -303,10 +302,8 @@ void connectToWiFi(const char *stassid, const char *stapsk,
 
   WiFi.mode(WIFI_STA);
   if (ip_str && gateway_str && subnet_str)
-  {
-    Serial.println("debug");
+  {;
     IPAddress ip, gateway, subnet;
-
     ip.fromString(ip_str);
     gateway.fromString(gateway_str);
     subnet.fromString(subnet_str);
@@ -431,24 +428,6 @@ void setupServer()
 
   SERVER.serveStatic("/", LittleFS, "/");
 
-  // * this is needed for https
-  /* SERVER.onSslFileRequest([](void * arg, const char *filename, uint8_t **buf) -> int {
-    Serial.printf("SSL File: %s\n", filename);
-    File file = LittleFS.open(filename, "r");
-    if(file){
-      size_t size = file.size();
-      uint8_t * nbuf = (uint8_t*)malloc(size);
-      if(nbuf){
-        size = file.read(nbuf, size);
-        file.close();
-        *buf = nbuf;
-        return size;
-      }
-      file.close();
-    }
-    *buf = 0;
-    return 0;
-  }, NULL); */
 }
 
 void setup(void)

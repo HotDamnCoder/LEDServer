@@ -8,7 +8,7 @@ API_SOCKET.onerror = handleAPIError;
 API_SIDED_CLOSE_MESSAGE = "";
 function handleAPIError(error) {
   if (API_SIDED_CLOSE_MESSAGE == "") {
-    alert(`An error occured in the api!\n${error.message}`);
+    alert(`An error occurred in the api!\n${error.message}`);
   }
 }
 
@@ -44,7 +44,7 @@ function handleAPIMessage(message) {
         break;
       case "MODE":
         updateTab(
-          document.getElementById(value + SEPERATOR + TAB_SUFFIX),
+          document.getElementById(value + SEPARATOR + TAB_SUFFIX),
           value
         );
         MODE = value;
