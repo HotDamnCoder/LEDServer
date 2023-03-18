@@ -17,8 +17,8 @@
 #define NEXT_ROOM "241"
 #define NEXT_ROOM_URL ""
 
-#define STASSID "***REMOVED***"
-#define STAPASS "***REMOVED***"
+#define STASSID ""
+#define STAPASS ""
 
 #define OTAPASS "***REMOVED***"       // ! Change it to more secure
 #define HTTP_USERNAME "***REMOVED***" // ! Change it to more secure
